@@ -1,0 +1,12 @@
+<html>
+ <head></head>
+ <body>
+     <h1>Hello <% params.name %></h1>
+     <p>Your lucky number is <% number %></p>
+     <p>You are using <% request.user_agent %></p>
+     <% IF session.user %>
+         <p>You're logged in as <% session.user %></p>
+     <% END %>
+ </body>
+</html>
+

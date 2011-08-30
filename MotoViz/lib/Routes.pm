@@ -7,4 +7,9 @@ get '/' => sub {
     template 'index';
 };
 
+get '/hello/:name' => sub {
+    template 'hello' => { number => 42 };
+};
+
+
 true;
