@@ -1,4 +1,4 @@
 #!/usr/bin/env perl
 use Dancer;
-use Routes;
+use UIRoutes;
 dance;
