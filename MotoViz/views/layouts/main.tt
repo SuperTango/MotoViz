@@ -16,7 +16,13 @@
 <body>
 <% content %>
 <div id="footer">
-Powered by <a href="http://perldancer.org/">Dancer</a> <% dancer_version %>
+
+<% IF session.logged_in %>
+    Logged in as <% session.user.name %>, <% session.user.uid %>. <a href="/logout">Logout</a> 
+<% ELSE %>
+    Not Logged In! <a href="/login">Login</a>
+<% END %>
+ | Powered by <a href="http://perldancer.org/">Dancer</a> <% dancer_version %>
 </div>
 </body>
 </html>

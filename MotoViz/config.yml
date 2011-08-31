@@ -18,7 +18,7 @@ charset: "UTF-8"
 # simple: default and very basic template engine
 # template_toolkit: TT
 
-template: "simple"
+template: "template_toolkit"
 
 # template: "template_toolkit"
 # engines:
@@ -27,3 +27,22 @@ template: "simple"
 #     start_tag: '[%'
 #     end_tag:   '%]'
 
+plugins:
+    Database:
+        driver: 'mysql'
+        database: 'MotoViz'
+        host: 'localhost'
+        port: 3306
+        username: 'motoviz_user'
+        password: 'motoviz_pw'
+        connection_check_threshold: 10
+        dbi_params:
+            RaiseError: 1
+            AutoCommit: 1
+        log_queries: 1
+
+session: "YAML"
+session_dir: "var/sessions"
+
+raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data"
+#session_expires: 5
