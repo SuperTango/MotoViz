@@ -88,13 +88,13 @@ __PACKAGE__->table("points");
   default_value: 0
   is_nullable: 0
 
-=head2 gps_speed
+=head2 speed_gps
 
   data_type: 'float'
   default_value: 0
   is_nullable: 0
 
-=head2 sensor_speed
+=head2 speed_sensor
 
   data_type: 'float'
   default_value: 0
@@ -107,6 +107,18 @@ __PACKAGE__->table("points");
   is_nullable: 0
 
 =head2 distance_gps_delta
+
+  data_type: 'double precision'
+  default_value: 0
+  is_nullable: 0
+
+=head2 distance_sensor_total
+
+  data_type: 'double precision'
+  default_value: 0
+  is_nullable: 0
+
+=head2 distance_sensor_delta
 
   data_type: 'double precision'
   default_value: 0
@@ -208,13 +220,17 @@ __PACKAGE__->add_columns(
   { data_type => "tinyint", default_value => 0, is_nullable => 0 },
   "bearing",
   { data_type => "float", default_value => 0, is_nullable => 0 },
-  "gps_speed",
+  "speed_gps",
   { data_type => "float", default_value => 0, is_nullable => 0 },
-  "sensor_speed",
+  "speed_sensor",
   { data_type => "float", default_value => 0, is_nullable => 0 },
   "distance_gps_total",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "distance_gps_delta",
+  { data_type => "double precision", default_value => 0, is_nullable => 0 },
+  "distance_sensor_total",
+  { data_type => "double precision", default_value => 0, is_nullable => 0 },
+  "distance_sensor_delta",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "raw_data",
   { data_type => "text", default_value => "", is_nullable => 0 },
@@ -257,8 +273,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-08-31 14:22:42
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ijCg1XpebkYtVfW94DgwSA
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-08-31 18:51:04
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:kqnjhOsQM7EDBJ7AFii1hQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

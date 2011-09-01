@@ -42,63 +42,63 @@ __PACKAGE__->table("rides");
   default_value: current_timestamp
   is_nullable: 0
 
-=head2 start_time
+=head2 time_start
 
   data_type: 'datetime'
   datetime_undef_if_invalid: 1
   default_value: '0000-00-00 00:00:00'
   is_nullable: 0
 
-=head2 end_time
+=head2 time_end
 
   data_type: 'datetime'
   datetime_undef_if_invalid: 1
   default_value: '0000-00-00 00:00:00'
   is_nullable: 0
 
-=head2 start_lat
+=head2 lat_start
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 start_lon
+=head2 lon_start
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 end_lat
+=head2 lat_end
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 end_lon
+=head2 lon_end
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 min_lat
+=head2 lat_min
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 min_lon
+=head2 lon_min
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 max_lat
+=head2 lat_max
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 max_lon
+=head2 lon_max
 
   data_type: 'double precision'
   default_value: 0
@@ -168,35 +168,35 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 0,
   },
-  "start_time",
+  "time_start",
   {
     data_type => "datetime",
     "datetime_undef_if_invalid" => 1,
     default_value => "0000-00-00 00:00:00",
     is_nullable => 0,
   },
-  "end_time",
+  "time_end",
   {
     data_type => "datetime",
     "datetime_undef_if_invalid" => 1,
     default_value => "0000-00-00 00:00:00",
     is_nullable => 0,
   },
-  "start_lat",
+  "lat_start",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "start_lon",
+  "lon_start",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "end_lat",
+  "lat_end",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "end_lon",
+  "lon_end",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "min_lat",
+  "lat_min",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "min_lon",
+  "lon_min",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "max_lat",
+  "lat_max",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "max_lon",
+  "lon_max",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "distance",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
@@ -253,8 +253,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-08-31 13:45:14
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:jZcL8PSJ7wUxP/QsZYAsyA
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-08-31 18:51:04
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NVj5t+WXSYeS8fK4d+/WPQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
