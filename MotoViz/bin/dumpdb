@@ -1,2 +1,2 @@
 #!/bin/bash
-mysqldump --extended-insert=false -umotoviz_user -pmotoviz_pw  MotoViz > ~/MotoViz/MotoViz/db/fresh_backup.$$
+mysqldump --extended-insert=false -umotoviz_user -pmotoviz_pw  MotoViz > ~/MotoViz/MotoViz/db/backups/fresh_backup.$$

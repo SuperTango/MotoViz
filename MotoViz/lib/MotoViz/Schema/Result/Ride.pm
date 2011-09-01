@@ -104,7 +104,13 @@ __PACKAGE__->table("rides");
   default_value: 0
   is_nullable: 0
 
-=head2 distance
+=head2 total_gps_distance
+
+  data_type: 'double precision'
+  default_value: 0
+  is_nullable: 0
+
+=head2 total_sensor_distance
 
   data_type: 'double precision'
   default_value: 0
@@ -198,7 +204,9 @@ __PACKAGE__->add_columns(
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "lon_max",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "distance",
+  "total_gps_distance",
+  { data_type => "double precision", default_value => 0, is_nullable => 0 },
+  "total_sensor_distance",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "wh_total",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
@@ -253,8 +261,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-08-31 18:51:04
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NVj5t+WXSYeS8fK4d+/WPQ
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-01 10:39:18
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:F/OEYHwx0wslcTuVGqCwbw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
