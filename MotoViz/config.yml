@@ -40,9 +40,18 @@ plugins:
             RaiseError: 1
             AutoCommit: 1
         log_queries: 1
+    DBIC:
+        MotoViz:
+            dsn: 'dbi:mysql:MotoViz'
+            user: 'motoviz_user'
+            pass: 'motoviz_pw'
+            options:
+                RaiseError: 1
+                PrintError: 1
 
 session: "YAML"
 session_dir: "var/sessions"
 
 raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data"
 #session_expires: 5
+

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Dancer qw(:syntax);
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt);
-use Dancer::Plugin::Database;
+use Dancer::Plugin::DBIC;
 use Data::Dump qw( pp );
 use MIME::Base64;
 use Data::UUID;
@@ -23,13 +23,14 @@ sub createFromCredentials {
     bless $self, $class;
     my $email = shift;
     my $password = shift;
-    my $row = database->quick_select ( 'users', { email => $email });
-    debug ( pp ( $row ) );
-    if ( ! $row ) {
+    my $user = schema->resultset('User')->find({ email => $email });
+    debug ( 'dbic user: ' . ref ( $user ) );
+    if ( ! $user ) {
         return undef;
     }
+    debug ( 'name: ' . $user->name );
 
-    my $saved_bcrypt_pw = $row->{'pass'};
+    my $saved_bcrypt_pw = $user->pass;
     debug ( "pw:                $password" );
     debug ( "saved_bcrypt_pw:   $saved_bcrypt_pw" );
 
@@ -45,9 +46,11 @@ sub createFromCredentials {
 
     if ( $new_bcrypt_pw eq $id_salt.$bcrypt_hashed_pw ) {
         debug "matched";
-        while ( my ( $key, $value ) = each ( %{$row} ) ) {
+        my %data = $user->get_columns;
+        while ( my ( $key, $value ) = each ( %data ) ) {
             $self->{$key} = $value;
         }
+        debug ( pp ( $self ) );
         return $self;
     } else { 
         debug "NOT matched";

@@ -18,7 +18,7 @@
 <div id="footer">
 
 <% IF session.logged_in %>
-    Logged in as <% session.user.name %>, <% session.user.uid %>. <a href="/logout">Logout</a> 
+    Logged in as <% session.user.name %>, <% session.user.user_id %>. <a href="/logout">Logout</a> 
 <% ELSE %>
     Not Logged In! <a href="/login">Login</a>
 <% END %>

@@ -1,6 +1,6 @@
 package MotoViz;
 use Dancer ':syntax';
-use Dancer::Plugin::Database;
+use Dancer::Plugin::DBIC;
 use MotoViz::User;
 use Data::Dump qw( pp );
 use Data::UUID;
@@ -18,6 +18,14 @@ before sub {
 };
 
 get '/' => sub {
+    template 'indexnew.tt';
+};
+
+get '/test' => sub {
+    my $users = schema->resultset('User')->find({ email => 'altitude@funkware.co2m' });
+    debug ( 'dbic user: ' . ref ( $users ) );
+    debug ( 'user: ' . pp ( $users ) );
+    #debug ( 'name: ' . $users->name );
     template 'indexnew.tt';
 };
 
@@ -75,7 +83,7 @@ any ['get', 'post'] => '/new_upload' => sub {
 post '/upload' => sub {
     if ( ensure_logged_in() ) {
         my $ride_id = params->{'ride_id'} || 'ride_' . new Data::UUID->create_str();
-        my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'uid'} . '/' . $ride_id;
+        my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'user_id'} . '/' . $ride_id;
         my $ca_log_file = request->upload ( 'ca_log_file' );
         my $ca_gps_file = request->upload ( 'ca_gps_file' );
         debug ( 'ride_id: ' . $ride_id );
