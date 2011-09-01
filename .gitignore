@@ -2,4 +2,4 @@
 .*.swo
 logs
 var
-db/backups
+backups
