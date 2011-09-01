@@ -1,10 +1,9 @@
-package TangoGPS;
+package MotoViz::NMEAParser;
 use strict;
 use warnings;
 use Data::Dump qw( pp );
 use GPS::Point;
 use Time::Local;
-use JSON;
 
 
 sub new {
@@ -20,20 +19,29 @@ sub init {
     $self->{'nmea_file'} = shift;
     $self->{'last_gprmc_record'} = undef;
     $self->{'last_gpgga_record'} = undef;
+
+    if ( ! -f $self->{'nmea_file'} ) {
+        my $msg = 'NMEA file specified: "' . $self->{'nmea_file'} . '" does not exist';
+        debug ( $msg );
+        return { code => -1, message => $msg };
+    }
     if ( open ( $self->{'fh'}, $self->{'nmea_file'} ) ) {
         $self->{'ready'} = 1;
-        return 1;
+        return { code => 1, message => 'success' };
+
     } else {
-        return 0;
+        my $msg = 'Failed to open NMEA file: "' . $self->{'nmea_file'} . '". Error: ' . $!;
+        $self->{'ready'} = 0;
+        debug ( $msg );
+        return { code => -1, message => $msg };
     }
 }
-
 
 sub get_next_record {
     my $self = shift;
     my $input_record = shift;
     if ( ! $self->{'ready'} ) {
-        die "not ready";
+        return { code => -1, message => 'not ready' };
     }
     if ( ! defined $input_record ) {
         $input_record = {};

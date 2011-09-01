@@ -1,10 +1,13 @@
 package MotoViz;
 use Dancer ':syntax';
 use Dancer::Plugin::DBIC;
-use MotoViz::User;
 use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
+use JSON;
+
+use MotoViz::User;
+use MotoViz::CAFileProcessor;
 
 our $VERSION = '0.1';
 
@@ -26,6 +29,15 @@ get '/test' => sub {
     debug ( 'dbic user: ' . ref ( $users ) );
     debug ( 'user: ' . pp ( $users ) );
     #debug ( 'name: ' . $users->name );
+    template 'indexnew.tt';
+};
+
+get '/test2' => sub {
+    my $caFileProcessor = new MotoViz::CAFileProcessor;
+    $caFileProcessor->processCAFiles ( 'uid_E0740DAE-D361-11E0-B80A-910AC869DD8D',
+                                       'rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC',
+                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/CA_log0004 (04 Aug 2011 11 57 UTC).txt',
+                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/GPS_log0004 (04 Aug 2011 11 57 UTC).txt' );
     template 'indexnew.tt';
 };
 
@@ -82,7 +94,7 @@ any ['get', 'post'] => '/new_upload' => sub {
 
 post '/upload' => sub {
     if ( ensure_logged_in() ) {
-        my $ride_id = params->{'ride_id'} || 'ride_' . new Data::UUID->create_str();
+        my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
         my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'user_id'} . '/' . $ride_id;
         my $ca_log_file = request->upload ( 'ca_log_file' );
         my $ca_gps_file = request->upload ( 'ca_gps_file' );
