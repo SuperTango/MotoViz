@@ -238,21 +238,6 @@ __PACKAGE__->set_primary_key("ride_id");
 
 =head1 RELATIONS
 
-=head2 points
-
-Type: has_many
-
-Related object: L<MotoViz::Schema::Result::Point>
-
-=cut
-
-__PACKAGE__->has_many(
-  "points",
-  "MotoViz::Schema::Result::Point",
-  { "foreign.ride_id" => "self.ride_id" },
-  { cascade_copy => 0, cascade_delete => 0 },
-);
-
 =head2 user
 
 Type: belongs_to
@@ -269,8 +254,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-01 21:42:10
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:a6nAj64M0j68Dz5RKjABnQ
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-01 22:31:49
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Pq9kvusAx3HOOGCFG+U1TQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
