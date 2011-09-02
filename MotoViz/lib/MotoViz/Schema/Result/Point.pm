@@ -59,21 +59,15 @@ __PACKAGE__->table("points");
 
 =head2 time
 
-  data_type: 'datetime'
-  datetime_undef_if_invalid: 1
-  default_value: '0000-00-00 00:00:00'
-  is_nullable: 0
-
-=head2 time_millis
-
-  data_type: 'mediumint'
+  data_type: 'double precision'
   default_value: 0
+  extra: {unsigned => 1}
   is_nullable: 0
 
 =head2 time_diff
 
   data_type: 'mediumint'
-  default_value: 0
+  default_value: -1
   is_nullable: 0
 
 =head2 num_sats
@@ -207,15 +201,13 @@ __PACKAGE__->add_columns(
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "time",
   {
-    data_type => "datetime",
-    "datetime_undef_if_invalid" => 1,
-    default_value => "0000-00-00 00:00:00",
+    data_type => "double precision",
+    default_value => 0,
+    extra => { unsigned => 1 },
     is_nullable => 0,
   },
-  "time_millis",
-  { data_type => "mediumint", default_value => 0, is_nullable => 0 },
   "time_diff",
-  { data_type => "mediumint", default_value => 0, is_nullable => 0 },
+  { data_type => "mediumint", default_value => -1, is_nullable => 0 },
   "num_sats",
   { data_type => "tinyint", default_value => 0, is_nullable => 0 },
   "bearing",
@@ -273,8 +265,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-08-31 18:51:04
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:kqnjhOsQM7EDBJ7AFii1hQ
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-01 21:42:10
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:0xsVn9NFzQA7XQGkw9ZA6Q
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

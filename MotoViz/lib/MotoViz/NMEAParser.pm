@@ -1,6 +1,7 @@
 package MotoViz::NMEAParser;
 use strict;
 use warnings;
+use Dancer qw( :syntax );
 use Data::Dump qw( pp );
 use GPS::Point;
 use Time::Local;
@@ -19,6 +20,7 @@ sub init {
     $self->{'nmea_file'} = shift;
     $self->{'last_gprmc_record'} = undef;
     $self->{'last_gpgga_record'} = undef;
+    $self->{'date_last'} = { mon => 0, day => 1, year => 2000 };
 
     if ( ! -f $self->{'nmea_file'} ) {
         my $msg = 'NMEA file specified: "' . $self->{'nmea_file'} . '" does not exist';
@@ -54,7 +56,7 @@ sub get_next_record {
         next if ( $gps_line !~ /^\$(GPRMC|GPGGA)/ );
         #print $gps_line;
         if ( $1 eq 'GPRMC' ) {
-            parse_gprmc ( $gprmc_record, $gps_line );
+            $self->parse_gprmc ( $gprmc_record, $gps_line );
             #print pp ( $gprmc_record ) . "\n";
             if ( defined $self->{'last_gprmc_record'} ) {
                 #print "Already read a gprmc, returning old gprmc, setting last_gprmc to current gprmc\n";
@@ -62,7 +64,7 @@ sub get_next_record {
                 $self->{'last_gprmc_record'} = $gprmc_record;
                 last;
             } elsif ( defined $self->{'last_gpgga_record'} ) {
-                if ( $self->{'last_gpgga_record'}->{'time'} ne $gprmc_record->{'time'} ) {
+                if ( $self->{'last_gpgga_record'}->{'time'} != $gprmc_record->{'time'} ) {
                     #print "Already read a have a gpgga, but times don't match.  Returning last gpgga, setting last gprmc to current gprmc\n";
                     $final_record = $self->{'last_gpgga_record'};
                     $self->{'last_gpgga_record'} = undef;
@@ -81,7 +83,7 @@ sub get_next_record {
                 $self->{'last_gprmc_record'} = $gprmc_record;
             }
         } elsif ( $1 eq 'GPGGA' ) {
-            parse_gpgga ( $gpgga_record, $gps_line );
+            $self->parse_gpgga ( $gpgga_record, $gps_line );
             #print pp ( $gpgga_record ) . "\n";
             if ( defined $self->{'last_gpgga_record'} ) {
                 #print "Already read a gpgaa, returning old gpgga, setting last_gpgga to current gpgga\n";
@@ -89,7 +91,7 @@ sub get_next_record {
                 $self->{'last_gpgga_record'} = $gpgga_record;
                 last;
             } elsif ( defined $self->{'last_gprmc_record'} ) {
-                if ( $self->{'last_gprmc_record'}->{'time'} ne $gpgga_record->{'time'} ) {
+                if ( $self->{'last_gprmc_record'}->{'time'} != $gpgga_record->{'time'} ) {
                     #print "Already read a have a gprmc, but times don't match.  REturning last gprmc, setting last gpgga to current gpgga\n";
                     $final_record = $self->{'last_gprmc_record'};
                     $self->{'last_gprmc_record'} = undef;
@@ -113,22 +115,24 @@ sub get_next_record {
         $input_record->{$key} = $value;
     }
     return $input_record;
-
 }
 
 sub parse_gprmc {
+    my $self = shift;
     my $record = shift;
     my $gps_line = shift;
-    my ( $type, $sat_time, $sat_fix, $gps_lat, $lat_hem, $gps_lon, $lon_hem, $gps_speed, $bearing, $sat_date, $checksum ) = split ( /,/, $gps_line );
+    my ( $type, $sat_time, $sat_fix, $gps_lat, $lat_hem, $gps_lon, $lon_hem, $speed_gps, $bearing, $sat_date, $checksum ) = split ( /,/, $gps_line );
     return 0 if ( $type ne '$GPRMC' );
     return 0 if ( ! validate_checksum ( $gps_line ) );
     $record->{'gprmc_line'} = $gps_line;
     my ( $hour, $min, $sec, $millis ) = $sat_time =~ /(\d\d)(\d\d)(\d\d)\.(\d\d\d)/;
     my ( $day, $mon, $year ) = $sat_date =~ /(\d\d)(\d\d)(\d\d)/;
     $year += 2000;
-    $record->{'date'} = sprintf ( "%04d-%02d-%02d", $year, $mon, $day );
-    $record->{'time'} = sprintf ( "%02d:%02d:%02d", $hour, $min, $sec );
-    $record->{'timestamp'} = timegm($sec,$min,$hour,$day,( $mon - 1 ) ,$year) . '.' . $millis;
+    if ( $mon > 0 ) { 
+        $mon--;
+    }
+    $self->{'date_last'} = { year =>  $year, mon => $mon, day => $day };
+    $record->{'time'} = timegm($sec,$min,$hour,$day, $mon ,$year) . '.' . $millis;
     return 0 if ( $sat_fix ne 'A' );
     if ( ! $lat_hem ) {
         return 1;
@@ -143,12 +147,13 @@ sub parse_gprmc {
     $lon_deg += ( $lon_min / 60 );
     $lon_deg = -$lon_deg if ( $lon_hem eq 'W' );
     $record->{'lon'} = $lon_deg;
-    $record->{'gps_speed'} = $gps_speed *= 1.15077945;
+    $record->{'speed_gps'} = $speed_gps *= 1.15077945;
     $record->{'bearing'} = $bearing;
     return 1;
 }
 
 sub parse_gpgga {
+    my $self = shift;
     my $record = shift;
     my $gps_line = shift;
     my ( $type, $sat_time, $gps_lat, $lat_hem, $gps_lon, $lon_hem, $fix_quality, $num_sats, $hdop, $altitude, $altitude_units, $geoidl_separation, $geoidl_separation_units, $age, $diff, $checksum   ) = split ( /,/, $gps_line );
@@ -157,7 +162,7 @@ sub parse_gpgga {
     #return 0 if ( $sat_fix ne 'A' );
     $record->{'gpgga_line'} = $gps_line;
     my ( $hour, $min, $sec, $millis ) = $sat_time =~ /(\d\d)(\d\d)(\d\d)\.(\d\d\d)/;
-    $record->{'time'} = sprintf ( "%02d:%02d:%02d", $hour, $min, $sec );
+    $record->{'time'} = timegm($sec,$min,$hour,$self->{'date_last'}->{'day'}, $self->{'date_last'}->{'mon'}, $self->{'date_last'}->{'year'} ) . '.' . $millis;
     $record->{'altitude'} = $altitude;
     $record->{'altitude_units'} = $altitude_units;
     $record->{'num_sats'} = $num_sats;
@@ -244,7 +249,7 @@ sub fetch_points {
             $lastInt = $tmp;
             my $record = $json->decode ( $line );
             my $new_record = {};
-            foreach my $metric ( @{$requested_metrics}, 'date', 'time', 'timestamp' ) {
+            foreach my $metric ( @{$requested_metrics}, 'time', 'timestamp' ) {
                 push ( @{$new_records2->{$metric}}, ( exists $record->{$metric} ? $record->{$metric} += 0 : undef ) );
                 #$new_record->{$metric} = $record->{$metric};
             }

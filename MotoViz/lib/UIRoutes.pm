@@ -37,7 +37,9 @@ get '/test2' => sub {
     $caFileProcessor->processCAFiles ( 'uid_E0740DAE-D361-11E0-B80A-910AC869DD8D',
                                        'rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC',
                                        '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/CA_log0004 (04 Aug 2011 11 57 UTC).txt',
-                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/GPS_log0004 (04 Aug 2011 11 57 UTC).txt' );
+                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/GPS_log0004 (04 Aug 2011 11 57 UTC).txt',
+                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/motoviz_output.out',
+                                       );
     template 'indexnew.tt';
 };
 
@@ -101,8 +103,23 @@ post '/upload' => sub {
         debug ( 'ride_id: ' . $ride_id );
         debug ( 'got ca_log_file: ' . pp ( $ca_log_file ) );
         debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
-        move_upload ( $ca_log_file, $ride_path );
-        move_upload ( $ca_gps_file, $ride_path );
+        my $ret = move_upload ( $ca_log_file, $ride_path );
+        if ( $ret->{'code'} <= 0 ) {
+            # TODO: Error handling here.
+        } else {
+            $ca_log_file = $ret->{'full_file'};
+        }
+
+        $ret = move_upload ( $ca_gps_file, $ride_path );
+        if ( $ret->{'code'} <= 0 ) {
+            # TODO: Error handling here.
+        } else {
+            $ca_gps_file = $ret->{'full_file'};
+        }
+
+        my $caFileProcessor = new MotoViz::CAFileProcessor;
+        $caFileProcessor->processCAFiles ( session ('user')->{'user_id'}, $ride_id,
+                $ca_log_file, $ca_gps_file, $ride_path . '/motoviz.out' );
     }
 };
 
@@ -134,8 +151,10 @@ sub move_upload {
         error ( 'failed to make ride directory: ' . $path );
         return { code => -1, message => 'failed to make ride directory: ' . $path };
     }
-    $upload->link_to ( $path . '/' . $filename );
+    my $full_file = $path . '/' . $filename;
+    $upload->link_to ( $full_file );
     unlink ( $upload->tempname );
+    return { code => 1, message => 'success', full_file => $full_file };
 }
 
 

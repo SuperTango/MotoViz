@@ -44,16 +44,16 @@ __PACKAGE__->table("rides");
 
 =head2 time_start
 
-  data_type: 'datetime'
-  datetime_undef_if_invalid: 1
-  default_value: '0000-00-00 00:00:00'
+  data_type: 'double precision'
+  default_value: 0
+  extra: {unsigned => 1}
   is_nullable: 0
 
 =head2 time_end
 
-  data_type: 'datetime'
-  datetime_undef_if_invalid: 1
-  default_value: '0000-00-00 00:00:00'
+  data_type: 'double precision'
+  default_value: 0
+  extra: {unsigned => 1}
   is_nullable: 0
 
 =head2 lat_start
@@ -104,13 +104,13 @@ __PACKAGE__->table("rides");
   default_value: 0
   is_nullable: 0
 
-=head2 total_gps_distance
+=head2 distance_gps_total
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 total_sensor_distance
+=head2 distance_sensor_total
 
   data_type: 'double precision'
   default_value: 0
@@ -128,13 +128,19 @@ __PACKAGE__->table("rides");
   default_value: 0
   is_nullable: 0
 
-=head2 max_speed
+=head2 miles_per_kwh
 
   data_type: 'double precision'
   default_value: 0
   is_nullable: 0
 
-=head2 avg_speed
+=head2 speed_max
+
+  data_type: 'double precision'
+  default_value: 0
+  is_nullable: 0
+
+=head2 speed_avg
 
   data_type: 'double precision'
   default_value: 0
@@ -176,16 +182,16 @@ __PACKAGE__->add_columns(
   },
   "time_start",
   {
-    data_type => "datetime",
-    "datetime_undef_if_invalid" => 1,
-    default_value => "0000-00-00 00:00:00",
+    data_type => "double precision",
+    default_value => 0,
+    extra => { unsigned => 1 },
     is_nullable => 0,
   },
   "time_end",
   {
-    data_type => "datetime",
-    "datetime_undef_if_invalid" => 1,
-    default_value => "0000-00-00 00:00:00",
+    data_type => "double precision",
+    default_value => 0,
+    extra => { unsigned => 1 },
     is_nullable => 0,
   },
   "lat_start",
@@ -204,17 +210,19 @@ __PACKAGE__->add_columns(
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "lon_max",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "total_gps_distance",
+  "distance_gps_total",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "total_sensor_distance",
+  "distance_sensor_total",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "wh_total",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "wh_per_mile",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "max_speed",
+  "miles_per_kwh",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "avg_speed",
+  "speed_max",
+  { data_type => "double precision", default_value => 0, is_nullable => 0 },
+  "speed_avg",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "num_points",
   {
@@ -261,8 +269,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-01 10:39:18
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:F/OEYHwx0wslcTuVGqCwbw
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-01 21:42:10
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:a6nAj64M0j68Dz5RKjABnQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
