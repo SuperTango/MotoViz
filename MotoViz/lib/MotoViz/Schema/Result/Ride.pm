@@ -8,7 +8,6 @@ use warnings;
 
 use base 'DBIx::Class::Core';
 
-__PACKAGE__->load_components("InflateColumn::DateTime");
 
 =head1 NAME
 
@@ -146,7 +145,7 @@ __PACKAGE__->table("rides");
   default_value: 0
   is_nullable: 0
 
-=head2 num_points
+=head2 points_count
 
   data_type: 'integer'
   default_value: 0
@@ -224,7 +223,7 @@ __PACKAGE__->add_columns(
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
   "speed_avg",
   { data_type => "double precision", default_value => 0, is_nullable => 0 },
-  "num_points",
+  "points_count",
   {
     data_type => "integer",
     default_value => 0,
@@ -254,8 +253,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-01 22:31:49
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Pq9kvusAx3HOOGCFG+U1TQ
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-09-02 08:56:52
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7sd60n0py4IbGPkAJEoP5Q
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -48,7 +48,7 @@ sub processCAFiles {
         'lon_max' => -1000,
         ride_id => $ride_id,
         user_id => $user_id,
-        num_points => 0,
+        points_count => 0,
         speed_max => 0,
         raw_data_type => 'CycleAnalyst',
     };
@@ -119,7 +119,7 @@ sub processCAFiles {
                 $last_gps_point = $gps_point;
                 print $output_fh $json->encode ( $record ) . "\n";
 # TODO: write to DB here.
-                $ride_data->{'num_points'}++;
+                $ride_data->{'points_count'}++;
                 #push ( @{$ride_data->{'records'}}, $record );
 
             }
@@ -141,7 +141,7 @@ sub processCAFiles {
     $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
     debug ( 'ride_data: ' . pp ( $ride_data ) );
     #$ride_data->{'skip'} = $query->param ( 'skip' );
-    # print $output_meta_fh $json->pretty->encode ( { num_points => $ride_data->{'num_points'} } ) . "\n";
+    # print $output_meta_fh $json->pretty->encode ( { points_count => $ride_data->{'points_count'} } ) . "\n";
     # TODO: print $output_meta_fh $json->pretty->encode ( $ride_data );
     my $row = schema->resultset('Ride')->find( $ride_data->{'ride_id'} );
     if ( $row ) {
