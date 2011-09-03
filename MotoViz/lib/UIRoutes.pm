@@ -120,7 +120,7 @@ post '/upload' => sub {
 
         my $caFileProcessor = new MotoViz::CAFileProcessor;
         $caFileProcessor->processCAFiles ( session ('user')->{'user_id'}, $ride_id,
-                $ca_log_file, $ca_gps_file, $ride_path . '/motoviz.out' );
+                $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out' );
     }
 };
 
