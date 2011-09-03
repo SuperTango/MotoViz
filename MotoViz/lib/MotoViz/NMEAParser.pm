@@ -209,59 +209,5 @@ sub calculate_checksum {
     return (sprintf("%2.2X",$csum));
 }
 
-sub fetch_points {
-    my $user = shift;
-    my $uuid = shift;
-    my $max_points = shift;
-    my $requested_metrics = shift;
-    my $json = JSON->new->allow_nonref;
-    
-    my $baseDir = '/funk/home/altitude/public_html/markcycle/data/' . $user;
-    my $dir = $baseDir . '/' . $uuid;
-    my $src_file = $dir . '/output_file';
-    my $meta_file = $dir . '/output_meta_file';
-    my $meta_data;
-    {
-        my $fh;
-        local $/ = undef;
-        open ( $fh, $meta_file ) || die;
-        my $str = <$fh>;
-        close ( $fh );
-        $meta_data = $json->decode ( $str );
-    }
-        #
-        # $mod is the ( total number of points / ( max_points - 1 ) ).
-        # to figure out which points from the original set to put in the final set,
-        # keep track of the last int ( $point_num / $mod ).  If the int value 
-        # is different than the last one, include the point.  Otherwise,
-        # discard the point.
-        #
-    my $mod = $meta_data->{'record_count'} / ( $max_points );
-    my $lastInt = -1;
-    my $count = 0;
-    my $fh;
-    open ( $fh, $src_file ) || die;
-    my $new_records = [];
-    my $new_records2 = {};
-    while ( my $line = <$fh> ) {
-        my $tmp = int ( $count / $mod );
-        if ( $tmp != $lastInt ) {
-            $lastInt = $tmp;
-            my $record = $json->decode ( $line );
-            my $new_record = {};
-            foreach my $metric ( @{$requested_metrics}, 'time', 'timestamp' ) {
-                push ( @{$new_records2->{$metric}}, ( exists $record->{$metric} ? $record->{$metric} += 0 : undef ) );
-                #$new_record->{$metric} = $record->{$metric};
-            }
-            #$new_record->{'date'} = $record->{'date'};
-            #$new_record->{'time'} = $record->{'time'};
-            #$new_record->{'timestamp'} = $record->{'timestamp'};
-            #print $json->encode ( $new_record ) . "\n";
-            #push ( @{$new_records}, $new_record );
-        }
-        $count++;
-    }
-    return $new_records2;
-}
 
 1;
