@@ -179,6 +179,27 @@ get '/v1/rides/:user_id/:ride_id' => sub {
     return to_json ( \%cols, { pretty => 1 } );
 };
 
+get '/v1/rides/:user_id' => sub {
+    my $ride_infos = schema->resultset('Ride')->search({ user_id => params->{'user_id'} });
+    if ( ! $ride_infos ) {
+        status 'not_found';
+        return;
+    }
+    my $array = [];
+    while ( my $ride_info = $ride_infos->next ) {
+        debug ( "got ride: " . $ride_info->ride_id );
+        debug ( "request base: " . request->base );
+        debug ( "request base: " . ref ( request->base ) );
+        my %cols = $ride_info->get_columns;
+        debug ( "cols: " . pp ( \%cols ) );
+        $cols{'ride_url'} = 'http://motoviz.funkware.com/v1/rides/' . params->{'user_id'} . '/' . $ride_info->ride_id;
+        $cols{'points_url'} = 'http://motoviz.funkware.com/v1/points/' . params->{'user_id'} . '/' . $ride_info->ride_id;
+
+        push ( @{$array}, \%cols );
+    }
+    content_type 'application/json';
+    return to_json ( $array, { pretty => ( exists params->{'pretty'} ) ? 1 : 0 } );
+};
 
 sub fetch_points {
     my $ride_info = shift;
