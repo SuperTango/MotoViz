@@ -27,33 +27,11 @@ template: "template_toolkit"
 #     start_tag: '[%'
 #     end_tag:   '%]'
 
-plugins:
-    Database:
-        driver: 'mysql'
-        database: 'MotoViz'
-        host: 'localhost'
-        port: 3306
-        username: 'motoviz_user'
-        password: 'motoviz_pw'
-        connection_check_threshold: 10
-        dbi_params:
-            RaiseError: 1
-            AutoCommit: 1
-        log_queries: 1
-    DBIC:
-        MotoViz:
-            dsn: 'dbi:mysql:MotoViz'
-            user: 'motoviz_user'
-            pass: 'motoviz_pw'
-            options:
-                RaiseError: 1
-                PrintError: 1
-
 session: "YAML"
 session_dir: "/funk/home/altitude/MotoViz/MotoViz/var/sessions"
-
-raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data"
 #session_expires: 5
+
 log_path: "/funk/home/altitude/MotoViz/MotoViz/logs"
 
 motoviz_url: "http://motoviz.funkware.com"
+motoviz_api_url: "http://motoviz_api.funkware.com"
