@@ -43,5 +43,5 @@ session_dir: "/funk/home/altitude/MotoViz/MotoViz/var/sessions"
 
 log_path: "/funk/home/altitude/MotoViz/MotoViz/logs"
 
-motoviz_ui_url: "http://motoviz.funkware.com/ui"
-motoviz_api_url: "http://motoviz.funkware.com/api"
+motoviz_ui_url: "http://motoviz.funkware.com"
+motoviz_api_url: "http://motoviz_api.funkware.com"

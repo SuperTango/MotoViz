@@ -19,52 +19,81 @@
 # </VirtualHost>
 
 # Using Plack
+<virtualhost *:80>
+    ServerName motoviz.funkware.com
+    ServerAdmin webmaster@funkware.net
+    DocumentRoot /funk/home/altitude/MotoViz/MotoViz
+
+    <directory /funk/home/altitude/MotoViz/MotoViz>
+        allowoverride none
+        order allow,deny
+        allow from all
+    </directory>
+
+    <location />
+        SetHandler perl-script
+        PerlHandler Plack::Handler::Apache2
+        PerlSetVar psgi_app /funk/home/altitude/MotoViz/MotoViz/bin/app.pl
+    </location>
+
+    ErrorLog  /funk/home/altitude/MotoViz/MotoViz/logs/error_log
+    CustomLog /funk/home/altitude/MotoViz/MotoViz/logs/access_log combined
+    SetEnv TMPDIR "/funk/home/altitude/MotoViz/MotoViz/var/tmp"
+    SetEnv DANCER_ENVIRONMENT "development"
+</VirtualHost>
+
+<virtualhost *:80>
+    ServerName motoviz_api.funkware.com
+    ServerAdmin webmaster@funkware.net
+    DocumentRoot /funk/home/altitude/MotoViz/MotoViz_API
+
+    <directory /funk/home/altitude/MotoViz/MotoViz_API>
+        allowoverride none
+        order allow,deny
+        allow from all
+    </directory>
+
+    <location />
+        SetHandler perl-script
+        PerlHandler Plack::Handler::Apache2
+        PerlSetVar psgi_app /funk/home/altitude/MotoViz/MotoViz_API/bin/app.pl
+    </location>
+
+    ErrorLog  /funk/home/altitude/MotoViz/MotoViz_API/logs/error_log
+    CustomLog /funk/home/altitude/MotoViz/MotoViz_API/logs/access_log combined
+    SetEnv TMPDIR "/funk/home/altitude/MotoViz/MotoViz_API/var/tmp"
+    SetEnv DANCER_ENVIRONMENT "development"
+</VirtualHost>
+
+# Using CGI.  Slow, but good for dev.
 # <VirtualHost *:80>
 #     ServerName motoviz.funkware.com
 #     ServerAlias motoviz
 #     ServerAdmin webmaster@funkware.net
-#     DocumentRoot /funk/home/altitude/MotoViz/MotoViz
+#     DocumentRoot /funk/home/altitude/MotoViz/MotoViz/public
 # 
-#     <Directory /funk/home/altitude/MotoViz/MotoViz>
+#     <Directory /funk/home/altitude/MotoViz/MotoViz/public>
 #         AllowOverride None
+#         Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
 #         Order allow,deny
 #         Allow from all
+#         AddHandler cgi-script .cgi
 #     </Directory>
 # 
-#     <Location />
-#         SetHandler perl-script
-#         PerlHandler Plack::Handler::Apache2
-#         PerlSetVar psgi_app /funk/home/altitude/MotoViz/MotoViz/bin/app.pl
-#     </Location>
+#     <Directory /funk/home/altitude/MotoViz/MotoViz_API/public>
+#         AllowOverride None
+#         Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+#         Order allow,deny
+#         Allow from all
+#         AddHandler cgi-script .cgi
+#     </Directory>
+#     RewriteEngine On
+#     RewriteCond %{REQUEST_FILENAME} !-f
+#     RewriteRule /api(.*)$ /funk/home/altitude/MotoViz/MotoViz_API/public/dispatch.cgi$1 [QSA,L]
+#     RewriteRule /ui(.*)$ /funk/home/altitude/MotoViz/MotoViz/public/dispatch.cgi$1 [QSA,L]
 # 
 #     ErrorLog  /funk/home/altitude/MotoViz/MotoViz/logs/error_log
 #     CustomLog /funk/home/altitude/MotoViz/MotoViz/logs/access_log combined
 #     SetEnv TMPDIR "/funk/home/altitude/MotoViz/MotoViz/var/tmp"
 #     SetEnv DANCER_ENVIRONMENT "development"
-# 
 # </VirtualHost>
-
-# Using CGI.  Slow, but good for dev.
- <VirtualHost *:80>
-     ServerName motoviz.funkware.com
-     ServerAlias motoviz
-     ServerAdmin webmaster@funkware.net
-     DocumentRoot /funk/home/altitude/MotoViz/MotoViz/public
- 
-     <Directory /funk/home/altitude/MotoViz/MotoViz/public>
-         AllowOverride None
-         Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-         Order allow,deny
-         Allow from all
-         AddHandler cgi-script .cgi
-     </Directory>
-     RewriteEngine On
-     RewriteCond %{REQUEST_FILENAME} !-f
-     RewriteRule ^(.*)$ /dispatch.cgi$1 [QSA,L]
- 
-     ErrorLog  /funk/home/altitude/MotoViz/MotoViz/logs/error_log
-     CustomLog /funk/home/altitude/MotoViz/MotoViz/logs/access_log combined
-     SetEnv TMPDIR "/funk/home/altitude/MotoViz/MotoViz/var/tmp"
-     SetEnv DANCER_ENVIRONMENT "development"
- 
- </VirtualHost>
