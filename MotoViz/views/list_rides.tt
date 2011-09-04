@@ -1,0 +1,4 @@
+<% FOREACH ride_info IN ride_infos %> 
+    <a href="/viewer/<% ride_info.ride_id %>">Ride: <% ride_info.time_start %> <% ride_info.ride_id %></a>
+<% END %>
+

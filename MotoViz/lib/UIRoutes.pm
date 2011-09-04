@@ -4,7 +4,7 @@ use Dancer::Plugin::DBIC;
 use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
-use JSON;
+use LWP::UserAgent;
 
 use MotoViz::User;
 use MotoViz::CAFileProcessor;
@@ -42,10 +42,6 @@ get '/test2' => sub {
                                        '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/motoviz_output.out',
                                        );
     template 'indexnew.tt';
-};
-
-get '/hello/:name' => sub {
-    template 'hello' => { number => 42 };
 };
 
 any ['get', 'post'] => '/login' => sub {
@@ -96,43 +92,73 @@ any ['get', 'post'] => '/new_upload' => sub {
 };
 
 post '/upload' => sub {
-    if ( ensure_logged_in() ) {
-        my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
-        my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'user_id'} . '/' . $ride_id;
-        my $ca_log_file = request->upload ( 'ca_log_file' );
-        my $ca_gps_file = request->upload ( 'ca_gps_file' );
-        debug ( 'ride_id: ' . $ride_id );
-        debug ( 'got ca_log_file: ' . pp ( $ca_log_file ) );
-        debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
-        my $ret = move_upload ( $ca_log_file, $ride_path );
-        if ( $ret->{'code'} <= 0 ) {
-            # TODO: Error handling here.
-        } else {
-            $ca_log_file = $ret->{'full_file'};
-        }
+    if ( ! ensure_logged_in() ) {
+        return;
+    }
+    my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
+    my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'user_id'} . '/' . $ride_id;
+    my $ca_log_file = request->upload ( 'ca_log_file' );
+    my $ca_gps_file = request->upload ( 'ca_gps_file' );
+    debug ( 'ride_id: ' . $ride_id );
+    debug ( 'got ca_log_file: ' . pp ( $ca_log_file ) );
+    debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
+    my $ret = move_upload ( $ca_log_file, $ride_path );
+    if ( $ret->{'code'} <= 0 ) {
+        # TODO: Error handling here.
+    } else {
+        $ca_log_file = $ret->{'full_file'};
+    }
 
-        $ret = move_upload ( $ca_gps_file, $ride_path );
-        if ( $ret->{'code'} <= 0 ) {
-            # TODO: Error handling here.
-        } else {
-            $ca_gps_file = $ret->{'full_file'};
-        }
+    $ret = move_upload ( $ca_gps_file, $ride_path );
+    if ( $ret->{'code'} <= 0 ) {
+        # TODO: Error handling here.
+    } else {
+        $ca_gps_file = $ret->{'full_file'};
+    }
 
-        my $caFileProcessor = new MotoViz::CAFileProcessor;
-        $caFileProcessor->processCAFiles ( session ('user')->{'user_id'}, $ride_id,
-                $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out' );
+    my $caFileProcessor = new MotoViz::CAFileProcessor;
+    $caFileProcessor->processCAFiles ( session ('user')->{'user_id'}, $ride_id,
+            $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out' );
+};
+
+get '/rides' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
+    }
+    my $url = setting ( "motoviz_url" ) . '/v1/rides/' . session ( 'user' )->{'user_id'};
+    debug ( "URL: " . $url );
+    my $ua = LWP::UserAgent->new;
+    my $response = $ua->get ( $url );
+    debug ( "response status: " . $response->status_line );
+    if ( $response->is_success ) {
+        my $ride_infos = from_json ( $response->decoded_content );
+        debug ( $ride_infos );
+        debug ( pp ( $ride_infos ) );
+        template 'list_rides.tt', {
+            user => session ( 'user' ),
+            ride_infos => $ride_infos,
+        };
+    } else {
+        if ( $response->code() == 404 ) {
+            debug ( "no rides for this user." );
+        } else {
+            debug ( "internal error" );
+        }
     }
 };
 
-get '/viewer/:user_id/:ride_id' => sub {
-    my $ride_info_db = schema->resultset('Ride')->find({ user_id => params->{'user_id'}, ride_id => params->{'ride_id'} });
+get '/viewer/:ride_id' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
+    }
+    my $ride_info_db = schema->resultset('Ride')->find({ user_id => session('user')->{'user_id'}, ride_id => params->{'ride_id'} });
     if ( ! $ride_info_db ) {
         status 'not_found';
         return;
     }
     my %cols = $ride_info_db->get_columns;
     template 'ride_viewer.tt', {
-        user_id => params->{'user_id'},
+        user_id => session('user')->{'user_id'},
         ride_id => params->{'ride_id'},
         title => "Ride on " . localtime ( int ( $cols{'time_start'} ) ),
     }, { layout => undef };
@@ -181,10 +207,6 @@ get '/v1/rides/:user_id/:ride_id' => sub {
 
 get '/v1/rides/:user_id' => sub {
     my $ride_infos = schema->resultset('Ride')->search({ user_id => params->{'user_id'} });
-    if ( ! $ride_infos ) {
-        status 'not_found';
-        return;
-    }
     my $array = [];
     while ( my $ride_info = $ride_infos->next ) {
         debug ( "got ride: " . $ride_info->ride_id );
@@ -197,14 +219,18 @@ get '/v1/rides/:user_id' => sub {
 
         push ( @{$array}, \%cols );
     }
-    content_type 'application/json';
-    return to_json ( $array, { pretty => ( exists params->{'pretty'} ) ? 1 : 0 } );
+    if ( ! @{$array} ) {
+        status 'not_found';
+        return;
+    } else {
+        content_type 'application/json';
+        return to_json ( $array, { pretty => ( exists params->{'pretty'} ) ? 1 : 0 } );
+    }
 };
 
 sub fetch_points {
     my $ride_info = shift;
     my $limit_points = shift;
-    my $json = JSON->new->allow_nonref;
     
     my $points_count = $ride_info->{'points_count'};
     my $fh;
@@ -237,7 +263,7 @@ sub fetch_points {
         }
 
         if ( $should_fetch ) {
-            my $raw_point = $json->decode ( $line );
+            my $raw_point = from_json ( $line );
             push ( @{$points}, $raw_point );
         }
         $count++;
@@ -250,12 +276,11 @@ sub ensure_logged_in {
     if ( ! session('user') ) {
         debug ( 'not logged in, setting redirect to ' . request->path );
         session 'original_destination' => request->path;
-        template 'login.tt', {
+        return template 'login.tt', {
             'err' => 'Please login to perform your requested action.',
         };
-        return 0;
     } else {
-        return 1;
+        return undef;
     }
 }
 
