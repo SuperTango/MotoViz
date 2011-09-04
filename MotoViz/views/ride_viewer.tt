@@ -24,14 +24,12 @@
 var chart;
 $(document).ready(function() {
     var ride_info;
-    $.ajax({ url: '/v1/rides/<% user_id %>/<% ride_id %>',
-             dataType: 'json',
-             async: false,
-             success: function(data) {
+    $.getJSON('<% api_url %>/v1/rides/<% user_id %>/<% ride_id %>?callback=?', function(data) {
                  ride_info = data;
-            }});
+                 //alert ( ride_info.miles_per_kwh );
+            });
 
-    $.getJSON('/v1/points/<% user_id %>/<% ride_id %>?limit_points=200', function(data) {
+    $.getJSON('<% api_url%>/v1/points/<% user_id %>/<% ride_id %>?limit_points=200&callback=?', function(data) {
     
     var rideCoords = new Array();
     var numPoints = data.lat.length;

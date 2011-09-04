@@ -12,6 +12,14 @@ sub return_json {
     my $data = shift;
     my $options = shift;
     debug ( pp ( params ) );
+    my $ret;
+    if ( exists params->{'callback'} ) {
+        $ret = params->{'callback'} . '(';
+        content_type "text/javascript";
+    } else {
+        $ret = '';
+        content_type "application/json";
+    }
     if ( exists params->{'pretty'} ) {
         if ( ! $options ) {
             $options = {};
@@ -20,7 +28,9 @@ sub return_json {
     } 
     debug ( 'options: ' .  pp ( $options ) );
 
-    return to_json ( $data, $options );
+    $ret .= to_json ( $data, $options );
+    $ret .= ');' if ( params->{'callback'} );
+    return $ret;
 }
 
 get '/v1/points/:user_id/:ride_id' => sub {
