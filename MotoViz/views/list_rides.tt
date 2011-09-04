@@ -1,4 +1,6 @@
+<ul>
 <% FOREACH ride_info IN ride_infos %> 
-    <a href="<% ui_url %>/viewer/<% ride_info.ride_id %>">Ride: <% ride_info.time_start %> <% ride_info.ride_id %></a>
+    <li><a href="<% ui_url %>/viewer/<% ride_info.ride_id %>">Ride: <% ride_info.time_start %> <% ride_info.ride_id %></a></li>
 <% END %>
+</ul>
 
