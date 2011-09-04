@@ -1,0 +1,54 @@
+# This is the main configuration file of your Dancer app
+# env-related settings should go to environments/$env.yml
+# all the settings in this file will be loaded at Dancer's startup.
+
+# Your application's name
+appname: "MotoViz_API"
+
+# The default layout to use for your application (located in
+# views/layouts/main.tt)
+#layout: "main"
+
+# when the charset is set to UTF-8 Dancer will handle for you
+# all the magic of encoding and decoding. You should not care
+# about unicode within your app when this setting is set (recommended).
+charset: "UTF-8"
+
+# template engine
+# simple: default and very basic template engine
+# template_toolkit: TT
+
+#template: "simple"
+
+# template: "template_toolkit"
+# engines:
+#   template_toolkit:
+#     encoding:  'utf8'
+#     start_tag: '[%'
+#     end_tag:   '%]'
+
+plugins:
+    Database:
+        driver: 'mysql'
+        database: 'MotoViz'
+        host: 'localhost'
+        port: 3306
+        username: 'motoviz_user'
+        password: 'motoviz_pw'
+        connection_check_threshold: 10
+        dbi_params:
+            RaiseError: 1
+            AutoCommit: 1
+        log_queries: 1
+    DBIC:
+        MotoViz:
+            dsn: 'dbi:mysql:MotoViz'
+            user: 'motoviz_user'
+            pass: 'motoviz_pw'
+            options:
+                RaiseError: 1
+                PrintError: 1
+
+raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz_API/var/raw_log_data"
+#session_expires: 5
+log_path: "/funk/home/altitude/MotoViz/MotoViz_API/logs"
