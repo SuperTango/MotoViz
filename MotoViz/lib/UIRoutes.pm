@@ -20,8 +20,20 @@ before sub {
     }
 };
 
+sub motoviz_template {
+    my $template = shift;
+    my $template_options = shift;
+    my $engine_options = shift;
+    if ( ! $template_options ) {
+        $template_options = {};
+    }
+    $template_options->{'ui_url'} = setting ( 'motoviz_ui_url' );
+    $template_options->{'api_url'} = setting ( 'motoviz_api_url' );
+    template $template, $template_options, $engine_options;
+}
+
 get '/' => sub {
-    template 'indexnew.tt';
+    motoviz_template 'indexnew.tt';
 };
 
 get '/test' => sub {
@@ -30,7 +42,7 @@ get '/test' => sub {
     debug ( 'user: ' . pp ( $users ) );
     #debug ( 'name: ' . $users->name );
     #setting ( 'layout' => undef );
-    template 'indexnew.tt';
+    motoviz_template 'indexnew.tt';
 };
 
 get '/test2' => sub {
@@ -41,7 +53,7 @@ get '/test2' => sub {
                                        '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/GPS_log0004 (04 Aug 2011 11 57 UTC).txt',
                                        '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/motoviz_output.out',
                                        );
-    template 'indexnew.tt';
+    motoviz_template 'indexnew.tt';
 };
 
 any ['get', 'post'] => '/login' => sub {
@@ -66,28 +78,27 @@ any ['get', 'post'] => '/login' => sub {
     }
  
     # display login form
-    template 'login.tt', { 
+    motoviz_template 'login.tt', { 
         'err' => $err,
-        'add_entry_url' => uri_for('/add'),
         user => $user,
     };
 };
 
 any ['get', 'post'] => '/logout' => sub {
     session->destroy;
-    template 'indexnew.tt';
+    motoviz_template 'indexnew.tt';
 };
 
 any ['get', 'post'] => '/new_upload' => sub {
     if ( ! session('user') ) {
         debug ( 'not logged in, setting redirect to /new_upload' );
         session 'original_destination' => '/new_upload';
-        template 'login.tt', {
-            'err' => 'must be logged in'
+        motoviz_template 'login.tt', {
+            'err' => 'must be logged in',
         };
         #return redirect '/login';
     } else {
-        template 'new_upload.tt';
+        motoviz_template 'new_upload.tt';
     }
 };
 
@@ -125,7 +136,7 @@ get '/rides' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         return $login_page;
     }
-    my $url = setting ( "motoviz_url" ) . '/v1/rides/' . session ( 'user' )->{'user_id'};
+    my $url = setting ( "motoviz_api_url" ) . '/v1/rides/' . session ( 'user' )->{'user_id'};
     debug ( "URL: " . $url );
     my $ua = LWP::UserAgent->new;
     my $response = $ua->get ( $url );
@@ -134,7 +145,7 @@ get '/rides' => sub {
         my $ride_infos = from_json ( $response->decoded_content );
         debug ( $ride_infos );
         debug ( pp ( $ride_infos ) );
-        template 'list_rides.tt', {
+        motoviz_template 'list_rides.tt', {
             user => session ( 'user' ),
             ride_infos => $ride_infos,
         };
@@ -157,7 +168,7 @@ get '/viewer/:ride_id' => sub {
         return;
     }
     my %cols = $ride_info_db->get_columns;
-    template 'ride_viewer.tt', {
+    motoviz_template 'ride_viewer.tt', {
         user_id => session('user')->{'user_id'},
         ride_id => params->{'ride_id'},
         title => "Ride on " . localtime ( int ( $cols{'time_start'} ) ),
@@ -169,7 +180,7 @@ sub ensure_logged_in {
     if ( ! session('user') ) {
         debug ( 'not logged in, setting redirect to ' . request->path );
         session 'original_destination' => request->path;
-        return template 'login.tt', {
+        motoviz_template 'login.tt', {
             'err' => 'Please login to perform your requested action.',
         };
     } else {
