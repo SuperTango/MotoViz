@@ -54,9 +54,6 @@ get '/v1/points/:user_id/:ride_id' => sub {
             push ( @{$ret->{$metric}}, [ $time, ( $point->{$metric} ) ? $point->{$metric} + 0 : 0 ] );
         }
     }
-
-
-    content_type 'application/json';
     return return_json ( $ret );
 };
 
@@ -69,7 +66,6 @@ get '/v1/rides/:user_id/:ride_id' => sub {
     my $params = params;
     my $limit_points = params->{'limit_points'};
     my %cols = $ride_info_db->get_columns;
-    content_type 'application/json';
     return return_json ( \%cols );
 };
 
@@ -91,7 +87,6 @@ get '/v1/rides/:user_id' => sub {
         status 'not_found';
         return;
     } else {
-        content_type 'application/json';
         return return_json ( $array );
     }
 };
