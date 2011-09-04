@@ -27,6 +27,16 @@ template: "template_toolkit"
 #     start_tag: '[%'
 #     end_tag:   '%]'
 
+plugins:
+    DBIC:
+        MotoViz:
+            dsn: 'dbi:mysql:MotoViz'
+            user: 'motoviz_user'
+            pass: 'motoviz_pw'
+            options:
+                RaiseError: 1
+                PrintError: 1
+
 session: "YAML"
 session_dir: "/funk/home/altitude/MotoViz/MotoViz/var/sessions"
 #session_expires: 5

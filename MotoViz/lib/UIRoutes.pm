@@ -7,6 +7,7 @@ use File::Path;
 use LWP::UserAgent;
 
 use MotoViz::CAFileProcessor;
+use MotoViz::User;
 
 our $VERSION = '0.1';
 
