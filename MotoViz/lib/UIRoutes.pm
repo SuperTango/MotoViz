@@ -90,29 +90,28 @@ any ['get', 'post'] => '/logout' => sub {
 };
 
 any ['get', 'post'] => '/new_upload' => sub {
-    if ( ! session('user') ) {
-        debug ( 'not logged in, setting redirect to /new_upload' );
-        session 'original_destination' => '/new_upload';
-        motoviz_template 'login.tt', {
-            'err' => 'must be logged in',
-        };
-        #return redirect '/login';
-    } else {
-        motoviz_template 'new_upload.tt';
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
     }
+    debug ( "logged in!" );
+    motoviz_template 'new_upload.tt';
 };
 
 post '/upload' => sub {
-    if ( ! ensure_logged_in() ) {
-        return;
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
     }
     my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'user_id'} . '/' . $ride_id;
+    my $title = params->{'title'};
+    my $public = params->{'public'} || 0;
     my $ca_log_file = request->upload ( 'ca_log_file' );
     my $ca_gps_file = request->upload ( 'ca_gps_file' );
     debug ( 'ride_id: ' . $ride_id );
     debug ( 'got ca_log_file: ' . pp ( $ca_log_file ) );
     debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
+    debug ( 'title' . $title );
+    debug ( 'public' . $public );
     my $ret = move_upload ( $ca_log_file, $ride_path );
     if ( $ret->{'code'} <= 0 ) {
         # TODO: Error handling here.
@@ -130,6 +129,11 @@ post '/upload' => sub {
     my $caFileProcessor = new MotoViz::CAFileProcessor;
     $caFileProcessor->processCAFiles ( session ('user')->{'user_id'}, $ride_id,
             $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out' );
+    motoviz_template 'ride_viewer.tt', {
+        user_id => session('user')->{'user_id'},
+        ride_id => $ride_id,
+        title => "new ride",
+    }, { layout => undef };
 };
 
 get '/rides' => sub {
@@ -180,7 +184,7 @@ sub ensure_logged_in {
     if ( ! session('user') ) {
         debug ( 'not logged in, setting redirect to ' . request->path );
         session 'original_destination' => request->path;
-        motoviz_template 'login.tt', {
+        return motoviz_template 'login.tt', {
             'err' => 'Please login to perform your requested action.',
         };
     } else {

@@ -36,7 +36,6 @@ sub processCAFiles {
         return { code => -1, message => 'failed to open ca log file: ' . $ca_log_file . '. Error: ' . $! };
     }
 
-    my $json = JSON->new->allow_nonref;
     my $nmeaParser = new MotoViz::NMEAParser;
     my $ret = $nmeaParser->init ( $ca_gps_file );
 
@@ -117,13 +116,13 @@ sub processCAFiles {
                 }
                 $last_record = $record;
                 $last_gps_point = $gps_point;
-                print $output_fh $json->encode ( $record ) . "\n";
+                print $output_fh to_json ( $record ) . "\n";
 # TODO: write to DB here.
                 $ride_data->{'points_count'}++;
                 #push ( @{$ride_data->{'records'}}, $record );
 
             }
-            $record->{'raw_data'} = $json->encode ( $raw_data );
+            $record->{'raw_data'} = to_json ( $raw_data );
 #             if ( exists ( $record->{'datetime'} ) ) {
 #                 if ( ! $ride_data->{'first_datetime'} ) {
 #                     $ride_data->{'first_datetime'} = $record->{'datetime'};
