@@ -50,8 +50,10 @@ plugins:
                 PrintError: 1
 
 session: "YAML"
-session_dir: "var/sessions"
+session_dir: "/funk/home/altitude/MotoViz/MotoViz/var/sessions"
 
 raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data"
 #session_expires: 5
+log_path: "/funk/home/altitude/MotoViz/MotoViz/logs"
 
+motoviz_url: "http://motoviz.funkware.com"

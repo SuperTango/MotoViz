@@ -1,0 +1,70 @@
+# using mod_proxy
+# <VirtualHost *:80>
+#     ServerName motoviz.funkware.com
+#     ServerAlias motoviz
+#     ServerAdmin webmaster@funkware.net
+#     #DocumentRoot /funk/home/altitude/MotoViz/MotoViz
+#     ErrorLog  /funk/home/altitude/MotoViz/MotoViz/logs/error_log
+#     CustomLog /funk/home/altitude/MotoViz/MotoViz/logs/access_log combined
+#     ProxyPass / http://localhost:3000/
+#     <Location />
+#         ProxyPassReverse http://localhost:3000/
+#         #ProxyHTMLURLMap / /
+#     </Location>
+# 
+#     <Proxy *>
+#         Order allow,deny
+#         Allow from all
+#     </Proxy>
+# </VirtualHost>
+
+# Using Plack
+# <VirtualHost *:80>
+#     ServerName motoviz.funkware.com
+#     ServerAlias motoviz
+#     ServerAdmin webmaster@funkware.net
+#     DocumentRoot /funk/home/altitude/MotoViz/MotoViz
+# 
+#     <Directory /funk/home/altitude/MotoViz/MotoViz>
+#         AllowOverride None
+#         Order allow,deny
+#         Allow from all
+#     </Directory>
+# 
+#     <Location />
+#         SetHandler perl-script
+#         PerlHandler Plack::Handler::Apache2
+#         PerlSetVar psgi_app /funk/home/altitude/MotoViz/MotoViz/bin/app.pl
+#     </Location>
+# 
+#     ErrorLog  /funk/home/altitude/MotoViz/MotoViz/logs/error_log
+#     CustomLog /funk/home/altitude/MotoViz/MotoViz/logs/access_log combined
+#     SetEnv TMPDIR "/funk/home/altitude/MotoViz/MotoViz/var/tmp"
+#     SetEnv DANCER_ENVIRONMENT "development"
+# 
+# </VirtualHost>
+
+# Using CGI.  Slow, but good for dev.
+ <VirtualHost *:80>
+     ServerName motoviz.funkware.com
+     ServerAlias motoviz
+     ServerAdmin webmaster@funkware.net
+     DocumentRoot /funk/home/altitude/MotoViz/MotoViz/public
+ 
+     <Directory /funk/home/altitude/MotoViz/MotoViz/public>
+         AllowOverride None
+         Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+         Order allow,deny
+         Allow from all
+         AddHandler cgi-script .cgi
+     </Directory>
+     RewriteEngine On
+     RewriteCond %{REQUEST_FILENAME} !-f
+     RewriteRule ^(.*)$ /dispatch.cgi$1 [QSA,L]
+ 
+     ErrorLog  /funk/home/altitude/MotoViz/MotoViz/logs/error_log
+     CustomLog /funk/home/altitude/MotoViz/MotoViz/logs/access_log combined
+     SetEnv TMPDIR "/funk/home/altitude/MotoViz/MotoViz/var/tmp"
+     SetEnv DANCER_ENVIRONMENT "development"
+ 
+ </VirtualHost>
