@@ -8,7 +8,7 @@ sub getRideInfos {
     my $user_path = setting ( 'raw_log_dir' ) . '/' . $user_id;
     my $dirFH;
     if ( ! opendir ( $dirFH, $user_path ) ) {
-        return { code => -404, message => 'user not found' };
+        return [];
     }
     my $ride_infos = [];
     foreach my $ride_id ( sort ( readdir ( $dirFH ) ) ) {

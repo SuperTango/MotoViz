@@ -72,6 +72,9 @@ get '/v1/ride/:user_id/:ride_id' => sub {
 get '/v1/ride/:user_id' => sub {
     my $ride_infos = MotoViz::RideInfo::getRideInfos ( params->{'user_id'} );
     my $array = [];
+    if ( ! @{$ride_infos} ) {
+        status 'not_found';
+    }
     foreach my $ride_info ( @{$ride_infos} ) {
         debug ( "cols: " . pp ( $ride_info ) );
         debug ( "got ride: " . $ride_info->{'ride_id'} );
