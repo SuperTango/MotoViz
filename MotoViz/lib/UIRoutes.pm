@@ -206,7 +206,6 @@ get '/viewer/:ride_id' => sub {
 
 };
 
-
 sub ensure_logged_in {
     if ( ! session('user') ) {
         debug ( 'not logged in, setting redirect to ' . request->path );
