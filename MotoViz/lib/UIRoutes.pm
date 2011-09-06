@@ -97,7 +97,7 @@ any ['get', 'post'] => '/register' => sub {
         my $userStore =  MotoViz::UserStore->new ( setting ( 'password_file' ) );
         my $user = {};
         my @errors;
-        foreach my $field qw( name email password1 password2 timezone ) {
+        foreach my $field ( qw( name email password1 password2 timezone ) ) {
             if ( ( ! params->{$field} ) || ( params->{$field} =~ /^\s*$/ ) ) {
                 push ( @errors, "The '" . $field . "' field must be provided" );
             } else {
@@ -148,7 +148,7 @@ any ['get', 'post'] => '/update_registration' => sub {
         my $userStore =  MotoViz::UserStore->new ( setting ( 'password_file' ) );
         my $updated_user = { user_id => $current_user->{'user_id'} };
         my @errors;
-        foreach my $field qw( name email timezone ) {
+        foreach my $field ( qw( name email timezone ) ) {
             if ( ( ! params->{$field} ) || ( params->{$field} =~ /^\s*$/ ) ) {
                 push ( @errors, "The '" . $field . "' field must be provided" );
             } else {

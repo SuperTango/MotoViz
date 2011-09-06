@@ -134,7 +134,7 @@ sub _validateUser {
         return { code => -1, message => 'No user provided' };
     }
 
-    foreach my $field qw( user_id name email pass timezone ) {
+    foreach my $field ( qw( user_id name email pass timezone ) ) {
         if ( ( ! $user->{$field} ) || ( $user->{$field} =~ /^\s*$/ ) ) {
             push ( @errors, "The '" . $field . "' cannot be empty" );
         }
