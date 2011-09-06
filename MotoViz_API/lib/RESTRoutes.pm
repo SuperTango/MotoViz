@@ -1,6 +1,5 @@
 package RESTRoutes;
 use Dancer ':syntax';
-use Dancer::Plugin::DBIC;
 use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
