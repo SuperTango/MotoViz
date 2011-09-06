@@ -15,3 +15,5 @@ show_errors: 0
 # cache route resolution for maximum performance
 route_cache: 1
 
+motoviz_ui_url: "http://motoviz.funkware.com"
+motoviz_api_url: "http://motoviz_api.funkware.com"

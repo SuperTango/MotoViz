@@ -45,5 +45,3 @@ log_path: "logs"
 
 raw_log_dir: "var/raw_log_data"
 password_file: "var/users.data"
-motoviz_ui_url: "http://motoviz.funkware.com"
-motoviz_api_url: "http://motoviz_api.funkware.com"

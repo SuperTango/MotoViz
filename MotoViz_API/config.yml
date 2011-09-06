@@ -49,6 +49,6 @@ plugins:
                 RaiseError: 1
                 PrintError: 1
 
-raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz_API/var/raw_log_data"
-log_path: "/funk/home/altitude/MotoViz/MotoViz_API/logs"
-api_url: "http://motoviz_api.funkware.com"
+raw_log_dir: "var/raw_log_data"
+log_path: "logs"
+api_url: "http://localhost:5001"
