@@ -6,7 +6,6 @@ use Data::UUID;
 use File::Path;
 use LWP::UserAgent;
 
-use MotoViz::CAFileProcessor;
 use MotoViz::User;
 
 our $VERSION = '0.1';
@@ -126,14 +125,27 @@ post '/upload' => sub {
         $ca_gps_file = $ret->{'full_file'};
     }
 
-    my $caFileProcessor = new MotoViz::CAFileProcessor;
-    $caFileProcessor->processCAFiles ( session ('user')->{'user_id'}, $ride_id,
-            $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out' );
-    motoviz_template 'ride_viewer.tt', {
-        user_id => session('user')->{'user_id'},
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
+    my $ua = LWP::UserAgent->new;
+    my $rest_params = {
         ride_id => $ride_id,
-        title => "new ride",
-    }, { layout => undef };
+        title => $title,
+        public => $public,
+        data_source => "CycleAnalyst",
+        ca_log_file => $ca_log_file,
+        ca_gps_file => $ca_gps_file,
+    };
+    my $response = $ua->post ( $url, $rest_params );
+    debug ( "response status: " . $response->status_line );
+    debug ( "ride_id: " . $ride_id );
+    if ( $response->code == 201 ) {
+        motoviz_template 'ride_viewer.tt', {
+            user_id => session('user')->{'user_id'},
+            ride_id => $ride_id,
+            title => $title,
+        }, { layout => undef };
+    }
+
 };
 
 get '/rides' => sub {
@@ -166,17 +178,31 @@ get '/viewer/:ride_id' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         return $login_page;
     }
-    my $ride_info_db = schema->resultset('Ride')->find({ user_id => session('user')->{'user_id'}, ride_id => params->{'ride_id'} });
-    if ( ! $ride_info_db ) {
-        status 'not_found';
-        return;
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
+    debug ( "URL: " . $url );
+    my $ua = LWP::UserAgent->new;
+    my $response = $ua->get ( $url );
+    debug ( "response status: " . $response->status_line );
+    if ( $response->is_success ) {
+        my $ride_info = from_json ( $response->decoded_content );
+        debug ( pp ( $ride_info ) );
+        motoviz_template 'ride_viewer.tt', {
+            user_id => session('user')->{'user_id'},
+            ride_id => params->{'ride_id'},
+            title => $ride_info->{'title'},
+        }, { layout => undef };
+
+
+    } else {
+        if ( $response->code() == 404 ) {
+            debug ( "no rides for this user." );
+        } else {
+            debug ( "internal error" );
+        }
     }
-    my %cols = $ride_info_db->get_columns;
-    motoviz_template 'ride_viewer.tt', {
-        user_id => session('user')->{'user_id'},
-        ride_id => params->{'ride_id'},
-        title => "Ride on " . localtime ( int ( $cols{'time_start'} ) ),
-    }, { layout => undef };
+
+
+
 };
 
 

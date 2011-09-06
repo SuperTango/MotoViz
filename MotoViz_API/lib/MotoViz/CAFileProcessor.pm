@@ -2,7 +2,6 @@ package MotoViz::CAFileProcessor;
 use strict;
 use warnings;
 use Dancer ':syntax';
-use Dancer::Plugin::DBIC;
 use GPS::Point;
 use Time::Local;
 use Data::Dump qw( pp );
@@ -25,6 +24,10 @@ sub processCAFiles {
     my $ca_log_file = shift;
     my $ca_gps_file = shift;
     my $output_file = shift;
+    my $output_meta_file = $output_file . '.meta';
+    my $title = shift;
+    my $public = shift;
+    my $input_data_source = shift;
 
     my $ca_log_fh;
     my $output_fh;
@@ -32,11 +35,15 @@ sub processCAFiles {
         return { code => -1, message => 'failed to open output log file for writing: ' . $output_file . '. Error: ' . $! };
     }
 
+    my $output_meta_fh;
+    if ( ! open ( $output_meta_fh, '>', $output_meta_file ) ) {
+        return { code => -1, message => 'failed to open output_meta log file for writing: ' . $output_meta_file . '. Error: ' . $! };
+    }
+
     if ( ! open ( $ca_log_fh, $ca_log_file ) ) {
         return { code => -1, message => 'failed to open ca log file: ' . $ca_log_file . '. Error: ' . $! };
     }
 
-    my $json = JSON->new->allow_nonref;
     my $nmeaParser = new MotoViz::NMEAParser;
     my $ret = $nmeaParser->init ( $ca_gps_file );
 
@@ -50,7 +57,9 @@ sub processCAFiles {
         user_id => $user_id,
         points_count => 0,
         speed_max => 0,
-        raw_data_type => 'CycleAnalyst',
+        input_data_source => $input_data_source,
+        title => $title,
+        public => $public,
     };
     my $last_gps_point;
     my $last_distance_sensor_total = 0;
@@ -117,36 +126,35 @@ sub processCAFiles {
                 }
                 $last_record = $record;
                 $last_gps_point = $gps_point;
-                print $output_fh $json->encode ( $record ) . "\n";
-# TODO: write to DB here.
+                print $output_fh to_json ( $record, { pretty => 0 } ). "\n";;
                 $ride_data->{'points_count'}++;
                 #push ( @{$ride_data->{'records'}}, $record );
 
             }
-            $record->{'raw_data'} = $json->encode ( $raw_data );
-#             if ( exists ( $record->{'datetime'} ) ) {
-#                 if ( ! $ride_data->{'first_datetime'} ) {
-#                     $ride_data->{'first_datetime'} = $record->{'datetime'};
-#                 }
-#                 $ride_data->{'last_datetime'} = $record->{'datetime'};
-#             }
+            $record->{'raw_data'} = to_json ( $raw_data, { pretty => 0 } );
         }
         $ca_line_count++;
     }
 
     $ride_data->{'speed_avg'} = $speed_total / $ca_line_count;
-    #$ride_data->{'lat_mid'} = $ride_data->{'lat_min'} + ( ( $ride_data->{'lat_max'} - $ride_data->{'lat_min'} ) / 2 );
-    #$ride_data->{'lon_mid'} = $ride_data->{'lon_min'} + ( ( $ride_data->{'lon_max'} - $ride_data->{'lon_min'} ) / 2 );
     $ride_data->{'wh_per_mile'} = $ride_data->{'wh_total'} / $ride_data->{'distance_gps_total'};
     $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
     debug ( 'ride_data: ' . pp ( $ride_data ) );
-    #$ride_data->{'skip'} = $query->param ( 'skip' );
-    # print $output_meta_fh $json->pretty->encode ( { points_count => $ride_data->{'points_count'} } ) . "\n";
-    # TODO: print $output_meta_fh $json->pretty->encode ( $ride_data );
-    my $row = schema->resultset('Ride')->find( $ride_data->{'ride_id'} );
-    if ( $row ) {
-        $row->delete;
-    }
-    my $new_ride = schema->resultset('Ride')->create( $ride_data );
+        
+        #
+        # needed for DB datastore.
+        # make sure you 'use Dancer::Plugin::DBIC';
+        #
+    #my $row = schema->resultset('Ride')->find( $ride_data->{'ride_id'} );
+    #if ( $row ) {
+    #    $row->delete;
+    #}
+    #my $new_ride = schema->resultset('Ride')->create( $ride_data );
+
+        #
+        # needed for file datastore
+        #
+    print $output_meta_fh to_json ( $ride_data, { pretty => 1 } );
+    return { code => 1, message => 'success' };
 }
 1;
