@@ -31,6 +31,10 @@ sub return_json {
     $ret .= ');' if ( params->{'callback'} );
     return $ret;
 }
+get '/v1/test' => sub {
+    return_json { message => 'Good!' };
+};
+
 
 get '/v1/points/:user_id/:ride_id' => sub {
     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
