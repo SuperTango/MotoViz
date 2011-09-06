@@ -1,0 +1,5 @@
+# list of modules that are required
+Dancer
+GPS::Point
+Crypt::Eksblowfish::Bcrypt
+Data::UUID
