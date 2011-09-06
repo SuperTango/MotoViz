@@ -78,8 +78,8 @@ get '/v1/rides/:user_id' => sub {
         debug ( "request base: " . ref ( request->base ) );
         my %cols = $ride_info->get_columns;
         debug ( "cols: " . pp ( \%cols ) );
-        $cols{'ride_url'} = 'http://motoviz.funkware.com/v1/rides/' . params->{'user_id'} . '/' . $ride_info->ride_id;
-        $cols{'points_url'} = 'http://motoviz.funkware.com/v1/points/' . params->{'user_id'} . '/' . $ride_info->ride_id;
+        $ride_info->{'ride_url'} = setting ( 'api_url' ) . '/v1/ride/' . params->{'user_id'} . '/' . $ride_info->{'ride_id'};
+        $ride_info->{'points_url'} = setting ( 'api_url' ) . '/v1/points/' . params->{'user_id'} . '/' . $ride_info->{'ride_id'};
 
         push ( @{$array}, \%cols );
     }
