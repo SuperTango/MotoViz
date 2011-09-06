@@ -1,0 +1,41 @@
+<form action="<% ui_url %>/update_registration" method=post>
+Update your All fields are required.
+<% IF errors %>
+<h2>Update Failed.</h2>
+The following errors occurred:
+<ul>
+    <% FOREACH error IN errors %> 
+        <li><% error %></li>
+    <% END %>
+</ul>
+<% END %>
+
+<dl>
+    <dt>Name</dt></dt>
+    <dd><input type="text" name="name" value="<% user.name %>"></dd>
+
+    <dt>Email Address (this will be your login)</dt>
+    <dd><input type="text" name="email" value="<% user.email %>"></dd>
+
+    
+    <dt>Note: the password fields are only required if you want to change your password</dt>
+    <dt>Old Password</dt>
+    <dd><input type="password" name="old_password"></dd>
+
+    <dt>Password</dt>
+    <dd><input type="password" name="password1"></dd>
+
+    <dt>Password Again</dt>
+    <dd><input type="password" name="password2"></dd>
+
+    <dt>Timezone</dt>
+    <dd><select name="timezone">
+        <option<% IF user.timezone == '' %> selected<% END %> value="">(Choose One)</option>
+        <option<% IF user.timezone == 'America/New_York' %> selected<% END %>>America/New_York</option>
+        <option<% IF user.timezone == 'America/Chicago' %> selected<% END %>>America/Chicago</option>
+        <option<% IF user.timezone == 'America/Phoenix' %> selected<% END %>>America/Phoenix</option>
+        <option<% IF user.timezone == 'America/Los_Angeles' %> selected<% END %>>America/Los_Angeles</option>
+        </select></dd>
+</dl>    
+<input type=submit value=OK>
+

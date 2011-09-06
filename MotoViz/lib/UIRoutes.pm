@@ -38,7 +38,7 @@ get '/createuser1' => sub {
     my $user = {
         user_id => 'uid_E0740DAE-D361-11E0-B80A-910AC869DD8D',
         name => 'Alex Tang',
-        pass => '$2a$05$eQZbqXIFCHMOMvDmmeICuu51qzZKmgb1yrnGuQGtmBavD0Jx.ko2q',
+        password_plaintext => 'foobar',
         email => 'altitude@funkware.com',
         timezone => 'America/Los_Angeles',
     };
@@ -61,7 +61,7 @@ any ['get', 'post'] => '/login' => sub {
             return 'An internal error occurred (' . $eid . ')';
         }
 
-        my $ret = $userStore->getUserFromCredentials ( params->{'username'}, params->{'password'} );
+        my $ret = $userStore->getUserFromCredentials ( params->{'email'}, params->{'password'} );
         if ( $ret->{'code'} <= 0 ) {
             my $eid = log_error ( 'error when getting users from credentials: ' . pp ( $ret ) );
             status ( 500 );
@@ -70,7 +70,7 @@ any ['get', 'post'] => '/login' => sub {
 
         my $user = $ret->{'data'};
         if ( ! $user ) {
-            $err = 'Invalid username or password';
+            $err = 'Login Failed.  Invalid or unknown email/password combination';
         } else {
             session 'user' => $user;
             if ( session ( 'original_destination' ) ) {
@@ -87,6 +87,127 @@ any ['get', 'post'] => '/login' => sub {
     motoviz_template 'login.tt', { 
         'err' => $err,
     };
+};
+
+any ['get', 'post'] => '/register' => sub {
+    if ( session('user') ) {
+        return motoviz_template 'indexnew.tt', { message => 'You are already logged in, registration not neeed or allowed' };
+    }
+    if ( request->method() eq "POST" ) {
+        my $userStore =  MotoViz::UserStore->new ( setting ( 'password_file' ) );
+        my $user = {};
+        my @errors;
+        foreach my $field qw( name email password1 password2 timezone ) {
+            if ( ( ! params->{$field} ) || ( params->{$field} =~ /^\s*$/ ) ) {
+                push ( @errors, "The '" . $field . "' field must be provided" );
+            } else {
+                $user->{$field} = params->{$field};
+            }
+        }
+        if ( ( ! params->{'password1'} ) || 
+             ( ! params->{'password2'} ) ||
+             ( params->{'password1'} ne params->{'password2'} ) ) {
+            push ( @errors, "Both passwords must exist and, they must be the same." );
+        }
+
+        my $ret = $userStore->getUserFromEmail ( params->{'email'} );
+        if ( $ret->{'code'} > 0 ) {
+            if ( $ret->{'data'} ) {
+                push ( @errors, "A user with the specified email address already exists" );
+            }
+        }
+
+        if ( @errors ) {
+            return motoviz_template 'register_form.tt', { errors => \@errors, user => $user };
+        }
+
+        $user->{'password_plaintext'} = $user->{'password1'};
+        $user->{'user_id'} = 'uid_' . new Data::UUID->create_str();
+        delete $user->{'password1'};
+        delete $user->{'password2'};
+        $ret = $userStore->updateUser ( $user );
+        if ( $ret->{'code'} == 0 ) {
+            log_error ( 'internal validation failed when registering user: ' . pp ( $user ) );
+            return motoviz_template 'register_form.tt', { user => $user, errors => [ 'validation failed' ] };
+        }
+
+        session 'user' => $user;
+        motoviz_template 'indexnew.tt';
+
+    } else {
+        motoviz_template 'register_form.tt';
+    }
+};
+
+any ['get', 'post'] => '/update_registration' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
+    }
+    my $current_user = session('user');
+    if ( request->method() eq "POST" ) {
+        my $userStore =  MotoViz::UserStore->new ( setting ( 'password_file' ) );
+        my $updated_user = { user_id => $current_user->{'user_id'} };
+        my @errors;
+        foreach my $field qw( name email timezone ) {
+            if ( ( ! params->{$field} ) || ( params->{$field} =~ /^\s*$/ ) ) {
+                push ( @errors, "The '" . $field . "' field must be provided" );
+            } else {
+                $updated_user->{$field} = params->{$field};
+            }
+        }
+
+        if ( params->{'password1'} || params->{'password2'} || params->{'old_password'} ) {
+            if ( ! params->{'old_password'} ) {
+                push ( @errors, 'When resetting your password, the old password must be provided.' );
+            }
+            if ( ( ! params->{'password1'} ) || 
+                 ( ! params->{'password2'} ) ||
+                 ( params->{'password1'} ne params->{'password2'} ) ) {
+                push ( @errors, "When resetting your password, Both passwords must exist and, they must be the same." );
+            }
+
+            if ( params->{'old_password'} ) {
+                my $ret = $userStore->getUserFromCredentials ( $current_user->{'email'}, params->{'old_password'} );
+                if ( $ret->{'code'} <= 0 ) {
+                    my $eid = log_error ( 'error when getting users from credentials: ' . pp ( $ret ) );
+                    status ( 500 );
+                    return 'An internal error occurred (' . $eid . ')';
+                }
+                my $tmp_user = $ret->{'data'};
+                if ( ! $tmp_user ) {
+                    push ( @errors, "The old password was incorrect." );
+                } else {
+                    $updated_user->{'password_plaintext'} = params->{'password1'};
+                }
+            }
+
+        } else {
+            $updated_user->{'pass'} = $current_user->{'pass'};
+        }
+
+        my $ret = $userStore->getUserFromEmail ( params->{'email'} );
+        if ( $ret->{'code'} > 0 ) {
+            if ( $ret->{'data'} && $ret->{'data'}->{'user_id'} ne $current_user->{'user_id'} ) {
+                push ( @errors, "An account with the specified email address already exists" );
+            }
+        }
+
+        if ( @errors ) {
+            return motoviz_template 'update_user_form.tt', { errors => \@errors, user => $updated_user };
+        }
+
+        $ret = $userStore->updateUser ( $updated_user );
+        if ( $ret->{'code'} == 0 ) {
+            log_error ( 'internal validation failed when updating user: ' . pp ( $updated_user ) );
+            return motoviz_template 'update_user_form.tt', { user => $updated_user, errors => [ 'validation failed' ] };
+        }
+
+        session 'user' => $updated_user;
+        motoviz_template 'indexnew.tt', { message => 'Account information successfully updated' };
+
+    } else {
+        motoviz_template 'update_user_form.tt', { user => $current_user };
+    }
 };
 
 any ['get', 'post'] => '/logout' => sub {

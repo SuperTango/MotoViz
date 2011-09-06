@@ -79,22 +79,71 @@ sub getUserFromCredentials {
 sub updateUser {
     my $self = shift;
     my $user = shift;
-    my $ret = $self->_readPWFile();
+
+    if ( ! $user ) {
+        return { code => -1, message => 'no user specified to updateUser' };
+    }
+    if ( $user->{'password_plaintext'} ) {
+        my $id_salt = '$2a$05$';
+        my $salt = '';
+        for ( my $i = 0; $i < 20; $i++ ) {
+            $salt .= ('A'..'Z', 'a'..'z')[rand 52];
+        }
+        $salt .= 'Au';
+        debug ( 'setting new salt: ' . $salt );
+        $id_salt .= $salt;
+        my $hashed =  bcrypt ( $user->{'password_plaintext'}, $id_salt );
+        if ( ! $hashed ) {
+            return { code => -1, message => 'bcrypt failed! id_salt: ' .  $id_salt };
+        }
+        debug ( 'got good new encrypted pw: ' . $hashed );
+        $user->{'pass'} = $hashed;
+        delete $user->{'password_plaintext'};
+    }
+    debug ( 'updateUser on user: ' . pp ( $user ) );
+    my $ret = _validateUser ( $user );
+    debug ( "_validateUser returns: " . pp ( $ret ) );
+    if ( $ret->{'code'} <= 0 ) {
+        return $ret;
+    }
+    debug ( 'updateUser on user: ' . pp ( $user ) );
+
+    $ret = $self->_readPWFile();
     if ( $ret->{'code'} <= 0 ) {
         error ( 'Cannot read users file: ' . pp ( $ret ) );
         return $ret;
     }
-    if ( ! $user ) {
-        return { code => -1, message => 'no user specified to updateUser' };
-    }
+    my $user_entries = $ret->{'data'};
 
     if ( ! $user->{'user_id'} ) {
         return { code => -1, message => 'no user_id specified for the user: ' . pp ( $user ) };
     }
-    my $user_entries = $ret->{'data'};
     $user_entries->{$user->{'user_id'}} = $user;
-    $self->_updatePWFile ( $user_entries );
+    $ret = $self->_updatePWFile ( $user_entries );
+    if ( $ret->{'code'} <= 0 ) {
+        return $ret;
+    } else {
+        return { code => 1, message => 'success' };
+    }
+}
 
+sub _validateUser {
+    my $user = shift;
+    my @errors;
+    if ( ! $user ) {
+        return { code => -1, message => 'No user provided' };
+    }
+
+    foreach my $field qw( user_id name email pass timezone ) {
+        if ( ( ! $user->{$field} ) || ( $user->{$field} =~ /^\s*$/ ) ) {
+            push ( @errors, "The '" . $field . "' cannot be empty" );
+        }
+    }
+    if ( @errors ) {
+        return { code => 0, message => join ( ', ', @errors ) };
+    } else {
+        return { code => 1, message => 'success' };
+    }
 }
 
 sub _updatePWFile {
