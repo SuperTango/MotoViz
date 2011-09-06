@@ -148,11 +148,12 @@ post '/upload' => sub {
 
 };
 
+
 get '/rides' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         return $login_page;
     }
-    my $url = setting ( "motoviz_api_url" ) . '/v1/rides/' . session ( 'user' )->{'user_id'};
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
     debug ( "URL: " . $url );
     my $ua = LWP::UserAgent->new;
     my $response = $ua->get ( $url );

@@ -24,7 +24,7 @@
 var chart;
 $(document).ready(function() {
     var ride_info;
-    $.getJSON('<% api_url %>/v1/rides/<% user_id %>/<% ride_id %>?callback=?', function(data) {
+    $.getJSON('<% api_url %>/v1/ride/<% user_id %>/<% ride_id %>?callback=?', function(data) {
                  ride_info = data;
                  //alert ( ride_info.miles_per_kwh );
             });
