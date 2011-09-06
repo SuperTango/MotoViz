@@ -38,11 +38,12 @@ plugins:
                 PrintError: 1
 
 session: "YAML"
-session_dir: "/funk/home/altitude/MotoViz/MotoViz/var/sessions"
+session_dir: "var/sessions"
 session_expires: 3600
 
-log_path: "/funk/home/altitude/MotoViz/MotoViz/logs"
+log_path: "logs"
 
-raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz_API/var/raw_log_data"
+raw_log_dir: "var/raw_log_data"
+password_file: "var/users.data"
 motoviz_ui_url: "http://motoviz.funkware.com"
 motoviz_api_url: "http://motoviz_api.funkware.com"

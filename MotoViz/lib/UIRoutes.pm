@@ -1,21 +1,24 @@
 package UIRoutes;
 use Dancer ':syntax';
-use Dancer::Plugin::DBIC;
 use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
 use LWP::UserAgent;
 
-use MotoViz::User;
+use MotoViz::UserStore;
 
 our $VERSION = '0.1';
 
 before sub {
+    debug ( pp ( session ) );
     if ( request->path ne '/login' ) {
         if ( session ( 'original_destination' ) ) {
             debug ( 'not going to login, but original_destination set.  deleting original_destination from session' );
             session 'original_destination' => undef;
         }
+    }
+    if ( session ( 'user' ) ) {
+        session 'last_visit' => time;
     }
 };
 
@@ -31,16 +34,19 @@ sub motoviz_template {
     template $template, $template_options, $engine_options;
 }
 
-get '/' => sub {
-    motoviz_template 'indexnew.tt';
+get '/createuser1' => sub {
+    my $user = {
+        user_id => 'uid_E0740DAE-D361-11E0-B80A-910AC869DD8D',
+        name => 'Alex Tang',
+        pass => '$2a$05$eQZbqXIFCHMOMvDmmeICuu51qzZKmgb1yrnGuQGtmBavD0Jx.ko2q',
+        email => 'altitude@funkware.com',
+        timezone => 'America/Los_Angeles',
+    };
+    my $userStore =  MotoViz::UserStore->new ( setting ( 'password_file' ) );
+    my $ret = $userStore->updateUser ( $user );
 };
 
-get '/test' => sub {
-    my $users = schema->resultset('User')->find({ email => 'altitude@funkware.co2m' });
-    debug ( 'dbic user: ' . ref ( $users ) );
-    debug ( 'user: ' . pp ( $users ) );
-    #debug ( 'name: ' . $users->name );
-    #setting ( 'layout' => undef );
+get '/' => sub {
     motoviz_template 'indexnew.tt';
 };
 
@@ -58,13 +64,25 @@ get '/test2' => sub {
 any ['get', 'post'] => '/login' => sub {
     my $err;
  
-    my $user;
     if ( request->method() eq "POST" ) {
-        $user =  MotoViz::User->createFromCredentials ( params->{'username'}, params->{'password'} );
+        my $userStore =  MotoViz::UserStore->new ( setting ( 'password_file' ) );
+        if ( ! $userStore ) {
+            my $eid = log_error ( 'Failed getting user store' );
+            status ( 500 );
+            return 'An internal error occurred (' . $eid . ')';
+        }
+
+        my $ret = $userStore->getUserFromCredentials ( params->{'username'}, params->{'password'} );
+        if ( $ret->{'code'} <= 0 ) {
+            my $eid = log_error ( 'error when getting users from credentials: ' . pp ( $ret ) );
+            status ( 500 );
+            return 'An internal error occurred (' . $eid . ')';
+        }
+
+        my $user = $ret->{'data'};
         if ( ! $user ) {
             $err = 'Invalid username or password';
         } else {
-            session 'logged_in' => true;
             session 'user' => $user;
             if ( session ( 'original_destination' ) ) {
                 debug ( 'original destination set, doing a redirect.' );
@@ -79,7 +97,6 @@ any ['get', 'post'] => '/login' => sub {
     # display login form
     motoviz_template 'login.tt', { 
         'err' => $err,
-        user => $user,
     };
 };
 
@@ -239,5 +256,12 @@ sub move_upload {
     return { code => 1, message => 'success', full_file => $full_file };
 }
 
+
+sub log_error {
+    my $msg = shift;
+    my $eid = new Data::UUID->create_str();
+    error ( 'EID:' . $eid . ': ' . $msg );
+    return $eid;
+}
 
 true;
