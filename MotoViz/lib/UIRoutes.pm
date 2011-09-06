@@ -50,17 +50,6 @@ get '/' => sub {
     motoviz_template 'indexnew.tt';
 };
 
-get '/test2' => sub {
-    my $caFileProcessor = new MotoViz::CAFileProcessor;
-    $caFileProcessor->processCAFiles ( 'uid_E0740DAE-D361-11E0-B80A-910AC869DD8D',
-                                       'rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC',
-                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/CA_log0004 (04 Aug 2011 11 57 UTC).txt',
-                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/GPS_log0004 (04 Aug 2011 11 57 UTC).txt',
-                                       '/funk/home/altitude/MotoViz/MotoViz/var/raw_log_data/uid_E0740DAE-D361-11E0-B80A-910AC869DD8D/rid_45ECB7CC-D433-11E0-BD6D-C4EC9AAFEDAC/motoviz_output.out',
-                                       );
-    motoviz_template 'indexnew.tt';
-};
-
 any ['get', 'post'] => '/login' => sub {
     my $err;
  
