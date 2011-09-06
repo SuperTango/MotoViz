@@ -21,12 +21,10 @@ sub return_json {
         $ret = '';
         content_type "application/json";
     }
-    if ( exists params->{'pretty'} ) {
-        if ( ! $options ) {
-            $options = {};
-        }
-        $options->{'pretty'} = 1;
-    } 
+    if ( ! $options ) {
+        $options = {};
+    }
+    $options->{'pretty'} = ( exists params->{'pretty'} ) ? 1 : 0;
     debug ( 'options: ' .  pp ( $options ) );
 
     $ret .= to_json ( $data, $options );
