@@ -34,16 +34,15 @@ sub return_json {
 }
 
 get '/v1/points/:user_id/:ride_id' => sub {
-    my $ride_info_db = schema->resultset('Ride')->find({ user_id => params->{'user_id'}, ride_id => params->{'ride_id'} });
-    if ( ! $ride_info_db ) {
+    my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+    if ( ! $ride_info ) {
         status 'not_found';
         return;
     }
     my $params = params;
     my $limit_points = params->{'limit_points'};
-    my %cols = $ride_info_db->get_columns;
     my @metrics = $params->{'metrics'} || ( 'battery_volts', 'battery_amps', 'speed_gps', 'bearing', 'lat', 'lon'  );
-    my $points = fetch_points ( \%cols, $limit_points );
+    my $points = fetch_points ( $ride_info, $limit_points );
     my $ret = {};
     foreach my $point ( @{$points} ) {
         foreach my $metric ( @metrics ) {
@@ -57,31 +56,30 @@ get '/v1/points/:user_id/:ride_id' => sub {
     return return_json ( $ret );
 };
 
-get '/v1/rides/:user_id/:ride_id' => sub {
-    my $ride_info_db = schema->resultset('Ride')->find({ user_id => params->{'user_id'}, ride_id => params->{'ride_id'} });
-    if ( ! $ride_info_db ) {
+get '/v1/ride/:user_id/:ride_id' => sub {
+    my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+    if ( ! $ride_info ) {
         status 'not_found';
         return;
     }
     my $params = params;
     my $limit_points = params->{'limit_points'};
-    my %cols = $ride_info_db->get_columns;
-    return return_json ( \%cols );
+    return return_json ( $ride_info );
 };
 
-get '/v1/rides/:user_id' => sub {
-    my $ride_infos = schema->resultset('Ride')->search({ user_id => params->{'user_id'} });
+get '/v1/ride/:user_id' => sub {
+    my $ride_infos = MotoViz::RideInfo::getRideInfos ( params->{'user_id'} );
     my $array = [];
-    while ( my $ride_info = $ride_infos->next ) {
-        debug ( "got ride: " . $ride_info->ride_id );
+    foreach my $ride_info ( @{$ride_infos} ) {
+        debug ( "cols: " . pp ( $ride_info ) );
+        debug ( "got ride: " . $ride_info->{'ride_id'} );
+        debug ( "userid: " . params->{'user_id'} );
         debug ( "request base: " . request->base );
         debug ( "request base: " . ref ( request->base ) );
-        my %cols = $ride_info->get_columns;
-        debug ( "cols: " . pp ( \%cols ) );
         $ride_info->{'ride_url'} = setting ( 'api_url' ) . '/v1/ride/' . params->{'user_id'} . '/' . $ride_info->{'ride_id'};
         $ride_info->{'points_url'} = setting ( 'api_url' ) . '/v1/points/' . params->{'user_id'} . '/' . $ride_info->{'ride_id'};
 
-        push ( @{$array}, \%cols );
+        push ( @{$array}, $ride_info );
     }
     if ( ! @{$array} ) {
         status 'not_found';
