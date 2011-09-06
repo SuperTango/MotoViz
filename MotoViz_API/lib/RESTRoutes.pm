@@ -5,6 +5,7 @@ use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
 use MotoViz::CAFileProcessor;
+use MotoViz::RideInfo;
 
 our $VERSION = '0.1';
 
@@ -86,6 +87,30 @@ get '/v1/ride/:user_id' => sub {
         return;
     } else {
         return return_json ( $array );
+    }
+};
+
+post '/v1/ride/:user_id' => sub {
+    my $user_id = params->{'user_id'};
+    my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
+    my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
+    my $title = params->{'title'};
+    my $public = params->{'public'} || 0;
+    my $input_data_source = params->{'input_data_source'};
+    my $ca_log_file = params->{'ca_log_file'};
+    my $ca_gps_file = params->{'ca_gps_file'};
+
+    my $caFileProcessor = new MotoViz::CAFileProcessor;
+    my $ret = $caFileProcessor->processCAFiles ( $user_id, $ride_id, $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out', $title, $public, $input_data_source );
+    debug ( "caFileProcessor returns: " . pp ( $ret ) );
+    if ( $ret->{'code'} > 0 ) {
+        status 201;
+        header 'Location' => setting ( 'api_url' ) . '/v1/ride/' . $user_id . '/' . $ride_id;
+        return;
+    } else {
+        status 500;
+        warning 'Failed processing request.  processCAFiles returned: ' . pp ( $ret );
+        return;
     }
 };
 
