@@ -2,8 +2,8 @@
 <% IF err %><p class=error><strong>Error:</strong> <% err %><% END %>
 <form action="<% ui_url %>/login" method=post>
   <dl>
-    <dt>Username:
-    <dd><input type=text name=username>
+    <dt>Email:
+    <dd><input type=text name=email>
     <dt>Password:
     <dd><input type=password name=password>
     <dd><input type=submit value=Login>
