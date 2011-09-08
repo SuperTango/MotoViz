@@ -3,3 +3,4 @@ Dancer
 GPS::Point
 Crypt::Eksblowfish::Bcrypt
 Data::UUID
+Geo::Inverse
