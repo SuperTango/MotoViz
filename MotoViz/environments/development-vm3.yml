@@ -28,3 +28,4 @@ auto_reload: 0
 
 motoviz_ui_url: "http://motoviz.funkware.com"
 motoviz_api_url: "http://motoviz_api.funkware.com"
+raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz_API/var/raw_log_data"

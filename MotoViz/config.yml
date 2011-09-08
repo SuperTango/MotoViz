@@ -43,5 +43,5 @@ session_expires: 3600
 
 log_path: "logs"
 
-raw_log_dir: "var/raw_log_data"
+raw_log_dir: "../MotoViz_APIvar/raw_log_data"
 password_file: "var/users.data"
