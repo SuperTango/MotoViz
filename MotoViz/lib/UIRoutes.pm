@@ -240,8 +240,11 @@ post '/upload' => sub {
     debug ( 'public' . $public );
     debug ( 'move_upload ( ' . $ca_log_file . ', ' . $ride_path );
     my $ret = move_upload ( $ca_log_file, $ride_path );
+    debug ( 'ret from move_upload: ' . pp ( $ret ) );
     if ( $ret->{'code'} <= 0 ) {
-        # TODO: Error handling here.
+        my $eid = log_error ( 'Upload processing failed' );
+        status ( 500 );
+        return 'An internal error occurred (' . $eid . ')';
     } else {
         $ca_log_file = $ret->{'full_file'};
     }
@@ -264,7 +267,8 @@ post '/upload' => sub {
         ca_gps_file => $ca_gps_file,
     };
     my $response = $ua->post ( $url, $rest_params );
-    debug ( "response status: " . $response->status_line );
+    debug ( "response from API server for URL: $url, status: " . $response->status_line );
+    debug ( "response data: " . pp ( $response ));
     debug ( "ride_id: " . $ride_id );
     if ( $response->code == 201 ) {
         motoviz_template 'ride_viewer.tt', {
@@ -350,6 +354,7 @@ sub move_upload {
         return { code => 1, message => 'no upload file. no need to move' };
     }
     my $filename = $upload->filename;
+    debug ( "upload: " . $upload->filename );
     $filename =~ s/^\.+//;
     $filename =~ s/\/+//g;
 
@@ -359,7 +364,12 @@ sub move_upload {
         return { code => -1, message => 'failed to make ride directory: ' . $path };
     }
     my $full_file = $path . '/' . $filename;
-    $upload->link_to ( $full_file );
+    debug ( "upload: $full_file" );
+    if ( ! $upload->link_to ( $full_file ) ) {
+        if ( ! $upload->copy_to ( $full_file ) ) {
+            return { code => -1, message => 'upload->link_to and copy_to failed: ' . $! };
+        }
+    }
     unlink ( $upload->tempname );
     return { code => 1, message => 'success', full_file => $full_file };
 }
