@@ -60,6 +60,8 @@ sub processCAFiles {
         input_data_source => $input_data_source,
         title => $title,
         public => $public,
+        ca_log_file => $ca_log_file,
+        ca_gps_file => $ca_gps_file,
     };
     my $last_gps_point;
     my $last_distance_sensor_total = 0;
@@ -67,6 +69,7 @@ sub processCAFiles {
     my $point_num = 0;
     my $speed_total = 0;
 
+    my $time_last = 0;
     while ( my $ca_log_line = <$ca_log_fh> ) {
         my @arr = split ( /\s+/, $ca_log_line );
         next if ( @arr < 5 );
@@ -84,6 +87,7 @@ sub processCAFiles {
                 $record->{'battery_amps'}, 
                 $record->{'speed_sensor'}, 
                 $record->{'distance_sensor_total'} ) = @arr;
+            $record->{'watts'} = $record->{'battery_amps'} * $record->{'battery_volts'};
             $record->{'distance_sensor_delta'} = $record->{'distance_sensor_total'} - $last_distance_sensor_total;
             $last_distance_sensor_total = $record->{'distance_sensor_total'};
             $raw_data->{'ca_log_line'} = $ca_log_line;
@@ -91,6 +95,7 @@ sub processCAFiles {
             #debug ( pp ( $record ) ) ;
             $raw_data->{'ca_gprmc_line'} = $record->{'gprmc_line'};
             $raw_data->{'ca_gpgga_line'} = $record->{'gpgga_line'};
+            
             if ( exists ( $record->{'lat'} ) ) {
                 $ride_data->{'lat_min'} = $record->{'lat'} if ( $record->{'lat'} < $ride_data->{'lat_min'} );
                 $ride_data->{'lat_max'} = $record->{'lat'} if ( $record->{'lat'} > $ride_data->{'lat_max'} );
@@ -123,6 +128,20 @@ sub processCAFiles {
                     $ride_data->{'distance_gps_total'} += $record->{'distance_gps_delta'};
                     $record->{'distance_gps_total'} = $ride_data->{'distance_gps_total'};
                     $ride_data->{'wh_total'} += $record->{'battery_watt_hours'};
+
+                    my $tDiff = $record->{'time'} - $time_last;
+                    if ( $tDiff < 5000 ) {
+                        $record->{'wh'} = $record->{'watts'} * $tDiff / 3600000;
+                        if ( $record->{'distance_gps_delta'} > 0.0000001 ) {
+                            $record->{'whPerMile'} = ( $record->{'distance_gps_delta'} ) ? $record->{'wh'} / $record->{'distance_gps_delta'} : 0;
+                            $record->{'milesPerKWh'} = ( $record->{'distance_gps_delta'} ) ? $record->{'distance_gps_delta'} / $record->{'wh'} * 1000 : 0;
+                            if ( ( $record->{'whPerMile'} > 400 ) || ( $record->{'milesPerKWh'} > 400 ) ) {
+                                $record->{'whPerMile'} = 0;
+                                $record->{'milesPerKWh'} = 0;
+                            }
+                        }
+                    }
+                    $time_last = $tDiff;
                 }
                 $last_record = $record;
                 $last_gps_point = $gps_point;

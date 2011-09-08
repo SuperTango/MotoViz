@@ -43,7 +43,7 @@ get '/v1/points/:user_id/:ride_id' => sub {
     }
     my $params = params;
     my $limit_points = params->{'limit_points'};
-    my @metrics = $params->{'metrics'} || ( 'battery_volts', 'battery_amps', 'speed_gps', 'bearing', 'lat', 'lon'  );
+    my @metrics = $params->{'metrics'} || ( 'battery_volts', 'battery_amps', 'speed_gps', 'bearing', 'lat', 'lon', 'altitude', 'watts', 'wh', 'whPerMile', 'milesPerKWh', 'distance_gps_delta'   );
     my $points = fetch_points ( $ride_info, $limit_points );
     my $ret = {};
     foreach my $point ( @{$points} ) {
@@ -97,15 +97,9 @@ get '/v1/ride/:user_id' => sub {
 post '/v1/ride/:user_id' => sub {
     my $user_id = params->{'user_id'};
     my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
-    my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
     my $title = params->{'title'};
     my $public = params->{'public'} || 0;
-    my $input_data_source = params->{'input_data_source'};
-    my $ca_log_file = params->{'ca_log_file'};
-    my $ca_gps_file = params->{'ca_gps_file'};
-
-    my $caFileProcessor = new MotoViz::CAFileProcessor;
-    my $ret = $caFileProcessor->processCAFiles ( $user_id, $ride_id, $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out', $title, $public, $input_data_source );
+    my $ret = process_files ( $user_id, $ride_id, $title, $public );
     debug ( "caFileProcessor returns: " . pp ( $ret ) );
     if ( $ret->{'code'} > 0 ) {
         status 201;
@@ -117,6 +111,28 @@ post '/v1/ride/:user_id' => sub {
         return;
     }
 };
+
+# get '/v1/reprocess/:user_id/:ride_id' => sub {
+#     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+#     my $ret = process_files ( $user_id, $ride_id, $title, $public );
+#     return_json $ret, { pretty => 1 };
+# };
+
+sub process_files {
+    my $user_id = shift;
+    my $ride_id = shift;
+    my $title = shift;
+    my $public = shift;
+    my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
+    my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+    my $input_data_source = params->{'input_data_source'};
+    my $ca_log_file = params->{'ca_log_file'};
+    my $ca_gps_file = params->{'ca_gps_file'};
+
+    my $caFileProcessor = new MotoViz::CAFileProcessor;
+    return $caFileProcessor->processCAFiles ( $user_id, $ride_id, $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out', $title, $public, $input_data_source );
+};
+
 
 sub fetch_points {
     my $ride_info = shift;

@@ -163,8 +163,8 @@ sub parse_gpgga {
     $record->{'gpgga_line'} = $gps_line;
     my ( $hour, $min, $sec, $millis ) = $sat_time =~ /(\d\d)(\d\d)(\d\d)\.(\d\d\d)/;
     $record->{'time'} = timegm($sec,$min,$hour,$self->{'date_last'}->{'day'}, $self->{'date_last'}->{'mon'}, $self->{'date_last'}->{'year'} ) . '.' . $millis;
-    $record->{'altitude'} = $altitude;
-    $record->{'altitude_units'} = $altitude_units;
+    $record->{'altitude'} = ( $altitude ) ? $altitude * 3.2808399 : 0;  #alt is in meters, convert to feet.
+    $record->{'altitude_units'} = 'feet';
     $record->{'num_sats'} = $num_sats;
     if ( ! $lat_hem ) {
         return 1;

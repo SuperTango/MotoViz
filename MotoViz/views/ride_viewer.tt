@@ -21,6 +21,17 @@
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/themes/grid.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/modules/exporting.js"></script>
 <script type="text/javascript">
+function sortBySeriesName ( a, b ) {
+    if ( a.name < b.name ) {
+        return -1;
+    } 
+
+    if ( a.name > b.name ) {
+        return 1;
+    }
+    return 0;
+}
+
 var chart;
 $(document).ready(function() {
     var ride_info;
@@ -47,15 +58,23 @@ $(document).ready(function() {
         var s = "X" + data.lat[i][0];
         coordsHash[s] = coord;
     }
-    /*
-    var abc = new Array ( new google.maps.LatLng ( 39.8880416666667, -83.269916666666 ) );
-    var rideLine2 = new google.maps.Polyline ( {
-        path: abc,
-        strokeColor: "#FFFF00",
-        strokeOpacity: 1.0,
-        strokeWeight: 3
-    } );
-    */
+
+    var seriesArray = new Array();
+    for ( var metric in data ) {
+        if ( ( metric == "lat" ) || ( metric == "lon" ) || ( metric == "bearing" ) ) {
+            continue;
+        }
+        var series = { data: data[metric], type: 'line', name: metric };
+        if ( metric == "altitude" ) {
+            series.yAxis = 1;
+        } else if ( metric == "watts" ) {
+            series.yAxis = 2;
+        } else if ( metric == "distance_gps_delta" ) {
+            series.yAxis = 3;
+        }
+        seriesArray.push ( series );
+    }
+    seriesArray.sort ( sortBySeriesName );
 
     var rideLine = new google.maps.Polyline ( {
         path: rideCoords,
@@ -102,19 +121,27 @@ $(document).ready(function() {
             text: null
          }
       },
-      yAxis: {
-         //title: {
-            //text: 'Exchange rate'
-         //},
-         startOnTick: false,
-         showFirstLabel: false,
-         plotLines: [{
-            value: 0,
-            width: 1,
-            color: '#808080'
-         }]
-
-      },
+      yAxis: [
+        {
+        }, 
+        {
+            title: {
+                text: "Altitude (feet)",
+            },
+            opposite: true
+        },
+        {
+            title: {
+                text: "Voltage (watts)",
+            },
+            opposite: true,
+        },
+        {
+            title: {
+                text: "distance delta (miles)",
+            },
+        },
+      ],
       tooltip: {
           shared: true,
           formatter: function() {
@@ -136,23 +163,7 @@ $(document).ready(function() {
       legend: {
          enabled: true
       },
-      series: [
-        {
-         type: 'line',
-         name: 'Volts',
-         data: data.battery_volts,
-        },
-        {
-         type: 'spline',
-         name: 'Amps',
-         data: data.battery_amps,
-        },
-        {
-         type: 'line',
-         name: 'Speed (GPS)',
-         data: data.speed_gps,
-        },
-        ]
+      series: seriesArray
     });
 
             /*
