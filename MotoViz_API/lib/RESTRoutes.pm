@@ -23,7 +23,7 @@ sub return_json {
     if ( ! $options ) {
         $options = {};
     }
-    $options->{'pretty'} = ( exists params->{'pretty'} ) ? 1 : 0;
+    $options->{'pretty'} ||= ( exists params->{'pretty'} ) ? 1 : 0;
     debug ( 'options: ' .  pp ( $options ) );
 
     $ret .= to_json ( $data, $options );
@@ -33,7 +33,6 @@ sub return_json {
 get '/v1/test' => sub {
     return_json { message => 'Good!' };
 };
-
 
 get '/v1/points/:user_id/:ride_id' => sub {
     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
