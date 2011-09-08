@@ -238,6 +238,7 @@ post '/upload' => sub {
     debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
     debug ( 'title' . $title );
     debug ( 'public' . $public );
+    debug ( 'move_upload ( ' . $ca_log_file . ', ' . $ride_path );
     my $ret = move_upload ( $ca_log_file, $ride_path );
     if ( $ret->{'code'} <= 0 ) {
         # TODO: Error handling here.
@@ -328,9 +329,6 @@ get '/viewer/:ride_id' => sub {
             debug ( "internal error" );
         }
     }
-
-
-
 };
 
 sub ensure_logged_in {
