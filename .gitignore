@@ -1,5 +1,12 @@
+Wijmo-Open.1.4.1.zip
+CAFileProcessor-old.pm
 .*.swp
 .*.swo
 logs
 var
 backups
+MYMETA.yml
+Makefile
+Makefile.old
+blib/
+pm_to_blib
