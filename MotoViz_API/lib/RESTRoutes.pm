@@ -4,6 +4,7 @@ use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
 use MotoViz::CAFileProcessor;
+use MotoViz::OutputProcessor;
 use MotoViz::RideInfo;
 
 our $VERSION = '0.1';
@@ -30,6 +31,11 @@ sub return_json {
     $ret .= ');' if ( params->{'callback'} );
     return $ret;
 }
+
+get '/' => sub {
+    return_json { message => 'MotoViz_API!' };
+};
+
 get '/v1/test' => sub {
     return_json { message => 'Good!' };
 };
@@ -74,6 +80,7 @@ get '/v1/ride/:user_id' => sub {
     if ( ! @{$ride_infos} ) {
         status 'not_found';
     }
+    debug ( "Number of rides: " . @{$ride_infos} );
     foreach my $ride_info ( @{$ride_infos} ) {
         debug ( "cols: " . pp ( $ride_info ) );
         debug ( "got ride: " . $ride_info->{'ride_id'} );
@@ -98,7 +105,20 @@ post '/v1/ride/:user_id' => sub {
     my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
     my $title = params->{'title'};
     my $public = params->{'public'} || 0;
-    my $ret = process_files ( $user_id, $ride_id, $title, $public );
+    if ( ! params->{'data_source'} ) {
+        status 400;
+        return 'no data_source type defined';
+    }
+    my $input_processor;
+    if ( params->{'data_source'} eq 'CycleAnalyst' ) {
+        debug ( "Got CyclAnalyst type" );
+        $input_processor = new MotoViz::CAFileProcessor();
+        $input_processor->init ( $ride_id, params->{'ca_log_file'}, params->{'ca_gps_file'} );
+        debug ( pp ( $input_processor ) );
+    } else {
+        die "bad data souce: " . params->{'data_source'};
+    }
+    my $ret = process_files ( $user_id, $ride_id, $input_processor, $title, $public );
     debug ( "caFileProcessor returns: " . pp ( $ret ) );
     if ( $ret->{'code'} > 0 ) {
         status 201;
@@ -120,16 +140,13 @@ post '/v1/ride/:user_id' => sub {
 sub process_files {
     my $user_id = shift;
     my $ride_id = shift;
+    my $input_processor = shift;
     my $title = shift;
     my $public = shift;
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
-    my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
-    my $input_data_source = params->{'input_data_source'};
-    my $ca_log_file = params->{'ca_log_file'};
-    my $ca_gps_file = params->{'ca_gps_file'};
-
-    my $caFileProcessor = new MotoViz::CAFileProcessor;
-    return $caFileProcessor->processCAFiles ( $user_id, $ride_id, $ca_log_file, $ca_gps_file, $ride_path . '/motoviz_output.out', $title, $public, $input_data_source );
+    my $output_processor = new MotoViz::OutputProcessor();
+    $output_processor->init ( $user_id, $ride_id, $title, $public, $input_processor );
+    return $output_processor->generateOutputFile ( $ride_path . '/motoviz_output.out' );
 };
 
 
