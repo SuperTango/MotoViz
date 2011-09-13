@@ -27,11 +27,13 @@
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/themes/grid.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/modules/exporting.js"></script>
 
+<!--
 <link                         href="<% ui_url %>/wijmo-open/development-bundle/themes/rocket/jquery-wijmo.css" rel="stylesheet" type="text/css" />
 <link                         href="<% ui_url %>/wijmo-open/development-bundle/themes/wijmo/jquery.wijmo.wijsplitter.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="<% ui_url %>/wijmo-open/development-bundle/external/jquery-ui-1.8.16.custom.min.js" type="text/javascript"></script>
 <script type="text/javascript" src="<% ui_url %>/wijmo-open/development-bundle/wijmo/jquery.wijmo.wijutil.js" type="text/javascript"></script>
 <script type="text/javascript" src="<% ui_url %>/wijmo-open/development-bundle/wijmo/jquery.wijmo.wijsplitter.js" type="text/javascript"></script>
+-->
 
 <script type="text/javascript">
 function sortBySeriesName ( a, b ) {
@@ -47,7 +49,8 @@ function sortBySeriesName ( a, b ) {
 
 var chart;
 $(document).ready(function() {
-    $("#hsplitter").wijsplitter({ orientation: "horizontal", fullSplit: true });
+    //$("#hsplitter").wijsplitter({ orientation: "horizontal", fullSplit: true });
+    //$("#hsplitter").wijsplitter({ sized: function () { chart.redraw(); } });
     var ride_info;
     $.getJSON('<% api_url %>/v1/ride/<% user_id %>/<% ride_id %>?callback=?', function(data) {
                  ride_info = data;
@@ -195,7 +198,7 @@ $(document).ready(function() {
   </head>
   <body>
 		<!-- 3. Add the container -->
-                <div id="hsplitter">
+                <div id="hsplitter" style="width: 100%; height: 100%">
                     <div id="chart_container" style="width: 100%; height: 50%; margin: 0 auto"></div>
                     <div id="map_canvas" style="width:100%; height:50%"></div>
                 </div>
