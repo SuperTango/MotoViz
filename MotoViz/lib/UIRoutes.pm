@@ -233,39 +233,53 @@ post '/upload' => sub {
     my $public = params->{'public'} || 0;
     my $ca_log_file = request->upload ( 'ca_log_file' );
     my $ca_gps_file = request->upload ( 'ca_gps_file' );
+    my $tango_file = request->upload ( 'tango_file' );
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
+    my $ua = LWP::UserAgent->new;
+    my $ret;
     debug ( 'ride_id: ' . $ride_id );
     debug ( 'got ca_log_file: ' . pp ( $ca_log_file ) );
     debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
+    debug ( 'got tango_file: ' . pp ( $tango_file ) );
     debug ( 'title' . $title );
     debug ( 'public' . $public );
-    debug ( 'move_upload ( ' . $ca_log_file . ', ' . $ride_path );
-    my $ret = move_upload ( $ca_log_file, $ride_path );
-    debug ( 'ret from move_upload: ' . pp ( $ret ) );
-    if ( $ret->{'code'} <= 0 ) {
-        my $eid = log_error ( 'Upload processing failed' );
-        status ( 500 );
-        return 'An internal error occurred (' . $eid . ')';
-    } else {
-        $ca_log_file = $ret->{'full_file'};
-    }
-
-    $ret = move_upload ( $ca_gps_file, $ride_path );
-    if ( $ret->{'code'} <= 0 ) {
-        # TODO: Error handling here.
-    } else {
-        $ca_gps_file = $ret->{'full_file'};
-    }
-
-    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
-    my $ua = LWP::UserAgent->new;
     my $rest_params = {
         ride_id => $ride_id,
         title => $title,
         public => $public,
-        data_source => "CycleAnalyst",
-        ca_log_file => $ca_log_file,
-        ca_gps_file => $ca_gps_file,
     };
+    if ( $ca_log_file ) {
+        debug ( 'move_upload ( ' . $ca_log_file . ', ' . $ride_path );
+        $ret = move_upload ( $ca_log_file, $ride_path );
+        debug ( 'ret from move_upload: ' . pp ( $ret ) );
+        if ( $ret->{'code'} <= 0 ) {
+            my $eid = log_error ( 'Upload processing failed' );
+            status ( 500 );
+            return 'An internal error occurred (' . $eid . ')';
+        } else {
+            $ca_log_file = $ret->{'full_file'};
+        }
+
+        $ret = move_upload ( $ca_gps_file, $ride_path );
+        if ( $ret->{'code'} <= 0 ) {
+            # TODO: Error handling here.
+        } else {
+            $ca_gps_file = $ret->{'full_file'};
+        }
+        $rest_params->{'data_source'} = "CycleAnalyst";
+        $rest_params->{'ca_log_file'} = $ca_log_file;
+        $rest_params->{'ca_gps_file'} = $ca_gps_file;
+    } else {
+        $ret = move_upload ( $tango_file, $ride_path );
+        if ( $ret->{'code'} <= 0 ) {
+            # TODO: Error handling here.
+        } else {
+            $tango_file = $ret->{'full_file'};
+        }
+        $rest_params->{'data_source'} = "TangoLogger";
+        $rest_params->{'tango_file'} = $tango_file;
+    }
+
     my $response = $ua->post ( $url, $rest_params );
     debug ( "response from API server for URL: $url, status: " . $response->status_line );
     debug ( "response data: " . pp ( $response ));

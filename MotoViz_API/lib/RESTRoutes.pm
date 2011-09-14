@@ -4,6 +4,7 @@ use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
 use MotoViz::CAFileProcessor;
+use MotoViz::TangoLoggerProcessor;
 use MotoViz::OutputProcessor;
 use MotoViz::RideInfo;
 
@@ -105,6 +106,7 @@ post '/v1/ride/:user_id' => sub {
     my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
     my $title = params->{'title'};
     my $public = params->{'public'} || 0;
+
     if ( ! params->{'data_source'} ) {
         status 400;
         return 'no data_source type defined';
@@ -114,6 +116,11 @@ post '/v1/ride/:user_id' => sub {
         debug ( "Got CyclAnalyst type" );
         $input_processor = new MotoViz::CAFileProcessor();
         $input_processor->init ( $ride_id, params->{'ca_log_file'}, params->{'ca_gps_file'} );
+        debug ( pp ( $input_processor ) );
+    } elsif ( params->{'data_source'} eq 'TangoLogger' ) {
+        debug ( "Got TangoLogger type" );
+        $input_processor = new MotoViz::TangoLoggerProcessor();
+        $input_processor->init ( $ride_id, params->{'tango_file'} );
         debug ( pp ( $input_processor ) );
     } else {
         die "bad data souce: " . params->{'data_source'};

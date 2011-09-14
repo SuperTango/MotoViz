@@ -4,6 +4,7 @@
     Public?: <input type="checkbox" name="public" value="yes"><p/>
     CA Log File: <input type="file" name="ca_log_file"><p/>
     CA GPS File: <input type="file" name="ca_gps_file"><p/>
+    TangoLogger File: <input type="file" name="tango_file"><p/>
     <input type=submit name=press value="OK">
 </form>
 
