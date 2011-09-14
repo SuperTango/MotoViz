@@ -198,10 +198,23 @@ $(document).ready(function() {
   </head>
   <body>
 		<!-- 3. Add the container -->
-                <div id="hsplitter" style="width: 100%; height: 100%">
+                <div id="hsplitter" style="width: 100%; height: 95%">
                     <div id="chart_container" style="width: 100%; height: 50%; margin: 0 auto"></div>
                     <div id="map_canvas" style="width:100%; height:50%"></div>
                 </div>
+<div id="footer">
+
+<% IF session.user %>
+    Logged in as <% session.user.name %>:  
+    <a href="<% ui_url %>/rides">List Rides</a> |
+    <a href="<% ui_url %>/new_upload">Upload Ride</a> |
+    <a href="<% ui_url %>/update_registration">Update account</a> |
+    <a href="<% ui_url %>/logout">Logout</a>
+<% ELSE %>
+    Not Logged In! <a href="<% ui_url %>/login">Login</a>
+<% END %>
+ | Powered by <a href="http://perldancer.org/">Dancer</a> <% dancer_version %>
+</div>
   </body>
 </html>
 
