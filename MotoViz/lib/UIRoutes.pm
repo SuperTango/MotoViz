@@ -311,6 +311,7 @@ get '/rides' => sub {
         motoviz_template 'list_rides.tt', {
             user => session ( 'user' ),
             ride_infos => $ride_infos,
+            ride_info_count => scalar ( @{$ride_infos} ),
         };
     } else {
         if ( $response->code() == 404 ) {

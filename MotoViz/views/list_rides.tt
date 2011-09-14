@@ -1,6 +1,10 @@
+<% IF ride_info_count == 0 %> 
+    No rides have been uploaded
+<% ELSE %>
 <ul>
 <% FOREACH ride_info IN ride_infos %> 
     <li><a href="<% ui_url %>/viewer/<% ride_info.ride_id %>">Ride: <% ride_info.title %></a></li>
 <% END %>
 </ul>
+<% END %>
 

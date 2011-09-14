@@ -8,7 +8,7 @@ sub getRideInfos {
     my $user_path = setting ( 'raw_log_dir' ) . '/' . $user_id;
     my $dirFH;
     if ( ! opendir ( $dirFH, $user_path ) ) {
-        return [];
+        return undef;
     }
     my $ride_infos = [];
     foreach my $ride_id ( sort ( readdir ( $dirFH ) ) ) {
