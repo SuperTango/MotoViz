@@ -49,18 +49,19 @@ get '/v1/points/:user_id/:ride_id' => sub {
     }
     my $params = params;
     my $limit_points = params->{'limit_points'};
-    my @metrics = $params->{'metrics'} || ( 'battery_volts', 'battery_amps', 'speed_gps', 'bearing', 'lat', 'lon', 'altitude', 'watts', 'wh', 'whPerMile', 'milesPerKWh', 'distance_gps_delta'   );
-    my $points = fetch_points ( $ride_info, $limit_points );
-    my $ret = {};
-    foreach my $point ( @{$points} ) {
-        foreach my $metric ( @metrics ) {
-            my $time = $point->{'time'} * 1000;
-            if ( ! exists $ret->{$metric} ) {
-                $ret->{$metric} = [];
-            }
-            push ( @{$ret->{$metric}}, [ $time, ( $point->{$metric} ) ? $point->{$metric} + 0 : 0 ] );
-        }
-    }
+    my @metrics = $params->{'metrics'} || ( 'battery_volts', 'battery_amps', 'speed_gps', 'speed_sensor', 'bearing', 'lat', 'lon', 'altitude', 'watts', 'wh', 'whPerMile', 'milesPerKWh', 'distance_gps_delta'   );
+    my $ret = fetch_points_average ( $ride_info, $limit_points, \@metrics );
+#    my $points = fetch_points_instant ( $ride_info, $limit_points );
+#     my $ret = {};
+#     foreach my $point ( @{$points} ) {
+#         foreach my $metric ( @metrics ) {
+#             my $time = $point->{'time'} * 1000;
+#             if ( ! exists $ret->{$metric} ) {
+#                 $ret->{$metric} = [];
+#             }
+#             push ( @{$ret->{$metric}}, [ $time, ( $point->{$metric} ) ? $point->{$metric} + 0 : 0 ] );
+#         }
+#     }
     return return_json ( $ret );
 };
 
@@ -71,7 +72,6 @@ get '/v1/ride/:user_id/:ride_id' => sub {
         return;
     }
     my $params = params;
-    my $limit_points = params->{'limit_points'};
     return return_json ( $ride_info );
 };
 
@@ -153,7 +153,78 @@ sub process_files {
 };
 
 
-sub fetch_points {
+sub fetch_points_average {
+    my $ride_info = shift;
+    my $limit_points = shift;
+    my $metrics = shift;
+    
+    my $points_count = $ride_info->{'points_count'};
+    my $fh;
+    my $ride_file = setting ( 'raw_log_dir' ) . '/' . $ride_info->{'user_id'} . '/' . $ride_info->{'ride_id'} . '/motoviz_output.out';
+    my $points = [];
+    my $should_fetch;
+
+        #
+        # $mod is the ( total number of points / ( limit_points - 1 ) ).
+        # to figure out which points from the original set to put in the final set,
+        # keep track of the last int ( $point_num / $mod ).  If the int value 
+        # is different than the last one, include the point.  Otherwise,
+        # discard the point.
+        #
+    my $mod = ( $limit_points ) ? $points_count / ( $limit_points ) : 0;
+    my $lastInt = -1;
+    my $count = 0;
+    my $avgCount = 0;
+
+    open ( $fh, $ride_file ) || die;
+    my $data = {};
+    my $sums = {};
+    foreach my $metric ( @{$metrics} ) {
+        $sums->{$metric} = 0;
+        $data->{$metric} = [];
+    }
+    while ( my $line = <$fh> ) {
+        $should_fetch = 0;
+        $avgCount++;
+        if ( $limit_points ) {
+            my $tmp = int ( $count / $mod );
+            if ( $tmp != $lastInt ) {
+                $lastInt = $tmp;
+                $should_fetch = 1;
+            }
+        } else {
+            $should_fetch = 1;
+        }
+
+        my $raw_point = from_json ( $line );
+
+        foreach my $metric ( @{$metrics} ) {
+            $sums->{$metric} += ( $raw_point->{$metric} ) ? $raw_point->{$metric} : 0;
+        }
+
+        if ( $should_fetch ) {
+            my $time = $raw_point->{'time'} * 1000;
+            debug ( "avgCount: " . $avgCount );
+            foreach my $metric ( @{$metrics} ) {
+                if ( ( $metric eq 'lat' ) || ( $metric eq 'lon' ) ) {
+                    push ( @{$data->{$metric}}, [ $time, ( $raw_point->{$metric} ) ? $raw_point->{$metric} + 0 : 0 ] );
+                } else {
+                    my $avg = $sums->{$metric} / $avgCount;
+                    debug ( $metric . ', ' . $sums->{$metric} . ', avgCount: ' . $avgCount . ', avg: ' . $avg );
+                    push ( @{$data->{$metric}}, [ $time, ( $avg ) ? $avg + 0 : 0 ] );
+                }
+            }
+            foreach my $metric ( @{$metrics} ) {
+                $sums->{$metric} = 0;
+            }
+            $avgCount = 0;
+        }
+        $count++;
+    }
+    return $data;
+}
+
+sub fetch_points_instant {
     my $ride_info = shift;
     my $limit_points = shift;
     

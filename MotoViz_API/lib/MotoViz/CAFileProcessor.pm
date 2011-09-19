@@ -89,7 +89,7 @@ sub getNextRecord {
             $self->{'last_distance_sensor_total'} = $record->{'distance_sensor_total'};
             $record->{'ca_log_line'} = $ca_log_line;
             $nmea_parser->get_next_record ( $record );
-                    debug( "record time: " . $record->{'time'} );
+                    #debug( "record time: " . $record->{'time'} );
                     debug ( pp ( $record ) );
                     #debug( "old time:    " . $self->{'last_record'}->{'time'} );
             #debug ( pp ( $record ) ) ;
