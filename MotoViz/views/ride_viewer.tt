@@ -60,7 +60,7 @@ $(document).ready(function() {
     $.getJSON('<% api_url%>/v1/points/<% user_id %>/<% ride_id %>?limit_points=200&callback=?', function(data) {
     
     var rideCoords = new Array();
-    var numPoints = data.lat.length;
+    var numGPSPoints = data.lat.length;
     var coordsHash = {};
     var myOptions = {
         zoom: 1,
@@ -69,7 +69,7 @@ $(document).ready(function() {
     };
     var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 
-    for ( var i = 0; i < numPoints; i++ ) {
+    for ( var i = 0; i < numGPSPoints; i++ ) {
         var coord = new google.maps.LatLng ( data.lat[i][1], data.lon[i][1] );
         rideCoords.push ( coord );
         var s = "X" + data.lat[i][0];
@@ -107,7 +107,7 @@ $(document).ready(function() {
 
     });
     var endMarker = new google.maps.Marker ( {
-        position: new google.maps.LatLng ( data.lat[numPoints - 1][1], data.lon[numPoints - 1][1] ),
+        position: new google.maps.LatLng ( data.lat[numGPSPoints - 1][1], data.lon[numGPSPoints - 1][1] ),
         animation: google.maps.Animation.DROP,
         title: "End",
         icon: "http://motoviz.funkware.com/images/parking.png",

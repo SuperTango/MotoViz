@@ -202,13 +202,13 @@ sub fetch_points_average {
             $sums->{$metric} += ( $raw_point->{$metric} ) ? $raw_point->{$metric} : 0;
         }
 
+        my $time = $raw_point->{'time'} * 1000;
+        push ( @{$data->{'lat'}}, [ $time, ( $raw_point->{'lat'} ) ? $raw_point->{'lat'} + 0 : 0 ] );
+        push ( @{$data->{'lon'}}, [ $time, ( $raw_point->{'lon'} ) ? $raw_point->{'lon'} + 0 : 0 ] );
         if ( $should_fetch ) {
-            my $time = $raw_point->{'time'} * 1000;
             debug ( "avgCount: " . $avgCount );
             foreach my $metric ( @{$metrics} ) {
-                if ( ( $metric eq 'lat' ) || ( $metric eq 'lon' ) ) {
-                    push ( @{$data->{$metric}}, [ $time, ( $raw_point->{$metric} ) ? $raw_point->{$metric} + 0 : 0 ] );
-                } else {
+                if ( ( $metric ne 'lat' ) && ( $metric ne 'lon' ) ) {
                     my $avg = $sums->{$metric} / $avgCount;
                     debug ( $metric . ', ' . $sums->{$metric} . ', avgCount: ' . $avgCount . ', avg: ' . $avg );
                     push ( @{$data->{$metric}}, [ $time, ( $avg ) ? $avg + 0 : 0 ] );
