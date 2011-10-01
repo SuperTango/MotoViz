@@ -64,7 +64,6 @@ $(document).ready(function() {
     var coordsHash = {};
     var myOptions = {
         zoom: 1,
-        center: latlng,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
@@ -186,7 +185,6 @@ $(document).ready(function() {
             /*
              * google maps
              */
-        var latlng = new google.maps.LatLng(-34.397, 150.644);
         map.fitBounds ( new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info.lat_min, ride_info.lon_min ), new google.maps.LatLng ( ride_info.lat_max, ride_info.lon_max ) ) );
         rideLine.setMap ( map );
         startMarker.setMap ( map );
