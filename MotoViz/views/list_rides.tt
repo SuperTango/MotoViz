@@ -3,7 +3,8 @@
 <% ELSE %>
 <ul>
 <% FOREACH ride_info IN ride_infos %> 
-    <li><a href="<% ui_url %>/viewer/<% ride_info.ride_id %>">Ride: <% ride_info.title %></a></li>
+    <li>Ride: <% ride_info.title %> <a href="<% ui_url %>/viewer_server/<% ride_info.ride_id %>">Server View</a> <a
+    href="<% ui_url %>/viewer_client/<% ride_info.ride_id %>">Client View</a></a></li>
 <% END %>
 </ul>
 <% END %>
