@@ -7,7 +7,11 @@ use GPS::Point;
 use Time::Local;
 use Data::Dump qw( pp );
 
-my @header = ( 'current_millis','diff_millis','count','iterations','date','time','speed_gps','speed_rpm','lat','lon','heading','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low');
+my $headers = {
+    v1 => [ 'current_millis','diff_millis','count','iterations','date','time','speed_gps','speed_rpm','lat','lon','heading','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
+    v2 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
+};
+
 
 sub new {
     my $class = shift;
@@ -21,6 +25,7 @@ sub init {
     my $ride_id = shift;
     $self->{'tango_file'} = shift;
 
+    $self->{'header'} = $headers->{'v1'};
     my $ret = $self->verifyTangoFile ( $self->{'tango_file'} );
     if ( $ret->{'code'} <= 0 ) {
         log_error ( pp ( $ret ) );
@@ -66,21 +71,25 @@ sub getNextRecord {
     my $fh = $self->{'tango_fh'};
     my $tango_line;
     while ( $tango_line = <$fh> ) {
+        if ( $tango_line =~ /LOGFMT 2/ ) {
+            $self->{'header'} = $headers->{'v2'};
+            next;
+        }
         my $hash = {};
         my @arr = split ( /,/, $tango_line );
-        for ( my $i = 0; $i < @header; $i++ ) {
-            $hash->{$header[$i]} = $arr[$i];
+        for ( my $i = 0; $i < @{$self->{'header'}}; $i++ ) {
+            $hash->{$self->{'header'}->[$i]} = $arr[$i];
         }
         if ( $hash->{'date'} && $hash->{'time'} ) {
             my ( $year, $mon, $day ) = $hash->{'date'} =~ /(\d\d\d\d)(\d\d)(\d\d)/;
             my ( $hour, $min, $sec ) = $hash->{'time'} =~ /(\d\d)(\d\d)(\d\d)/;
+            next if ( $hash->{'date'} == 20000000 );
             $mon--;
             $record->{'time'} = timegm ( $sec, $min, $hour, $day, $mon, $year ) . '.000';
             next if ( $year < 2005 );
         } else {
             next;
         }
-#my @header = ( 'current_millis','diff_millis','count','iterations','date','time','speed_gps','speed_rpm','lat','lon','heading','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low');
         $record->{'battery_amps'} = $hash->{'batt_current'};
         $record->{'battery_volts'} = $hash->{'batt_voltage'};
         $record->{'speed_sensor'} = $hash->{'speed_rpm'};
@@ -144,9 +153,13 @@ sub verifyTangoFile {
     my $successes = 0;
     while ( $count <= 6 ) {
         my $line = <$fh>;
+        if ( $line =~ /LOGFMT 2/ ) {
+            $self->{'header'} = $headers->{'v2'};
+            next;
+        }
         if ( $line ) {
             my @arr = split ( /,/, $line );
-            if ( @arr == ( @header + 1 ) ) {
+            if ( @arr == ( @{$self->{'header'}} + 1 ) ) {
                 $successes++;
             }
         }
