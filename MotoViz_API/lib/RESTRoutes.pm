@@ -108,20 +108,25 @@ post '/v1/ride/:user_id' => sub {
         return 'no data_source type defined';
     }
     my $input_processor;
+    my $ret;
     if ( params->{'data_source'} eq 'CycleAnalyst' ) {
         debug ( "Got CyclAnalyst type" );
         $input_processor = new MotoViz::CAFileProcessor();
-        $input_processor->init ( $ride_id, params->{'ca_log_file'}, params->{'ca_gps_file'} );
+        $ret = $input_processor->init ( $ride_id, params->{'ca_log_file'}, params->{'ca_gps_file'} );
         debug ( pp ( $input_processor ) );
     } elsif ( params->{'data_source'} eq 'TangoLogger' ) {
         debug ( "Got TangoLogger type" );
         $input_processor = new MotoViz::TangoLoggerProcessor();
-        $input_processor->init ( $ride_id, params->{'tango_file'} );
+        $ret = $input_processor->init ( $ride_id, params->{'tango_file'} );
         debug ( pp ( $input_processor ) );
     } else {
         die "bad data souce: " . params->{'data_source'};
     }
-    my $ret = process_files ( $user_id, $ride_id, $input_processor, $title, $public );
+    if ( $ret->{'code'} <= 0 ) {
+        status 400;
+        return "Problem uploading file: " . pp ( $ret );
+    }
+    $ret = process_files ( $user_id, $ride_id, $input_processor, $title, $public );
     debug ( "caFileProcessor returns: " . pp ( $ret ) );
     if ( $ret->{'code'} > 0 ) {
         status 201;
