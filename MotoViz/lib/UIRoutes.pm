@@ -309,12 +309,12 @@ get '/rides' => sub {
     debug ( "response status: " . $response->status_line );
     if ( $response->is_success ) {
         my $ride_infos = from_json ( $response->decoded_content );
-        debug ( $ride_infos );
-        debug ( pp ( $ride_infos ) );
+        my @sorted_ride_infos = sort { $a->{'time_start'} <=> $b->{'time_start'} } ( @{$ride_infos} );
+        debug ( pp ( \@sorted_ride_infos ) );
         motoviz_template 'list_rides.tt', {
             user => session ( 'user' ),
-            ride_infos => $ride_infos,
-            ride_info_count => scalar ( @{$ride_infos} ),
+            ride_infos => \@sorted_ride_infos,
+            ride_info_count => scalar ( @sorted_ride_infos ),
         };
     } else {
         if ( $response->code() == 404 ) {
