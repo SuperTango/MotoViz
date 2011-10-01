@@ -4,6 +4,7 @@ use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
 use LWP::UserAgent;
+use HTML::Entities;
 
 use MotoViz::UserStore;
 
@@ -290,6 +291,8 @@ post '/upload' => sub {
             ride_id => $ride_id,
             title => $title,
         }, { layout => undef };
+    } else {
+        return "Got HTML Response: " . $response->code . "<pre>" . encode_entities ( $response->content ) . "</pre>";
     }
 
 };
