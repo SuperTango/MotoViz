@@ -36,6 +36,11 @@
 -->
 
 <script type="text/javascript">
+
+var chart;
+var ride_info;
+var points_data;
+
 function sortBySeriesName ( a, b ) {
     if ( a.name < b.name ) {
         return -1;
@@ -47,20 +52,12 @@ function sortBySeriesName ( a, b ) {
     return 0;
 }
 
-var chart;
-$(document).ready(function() {
-    //$("#hsplitter").wijsplitter({ orientation: "horizontal", fullSplit: true });
-    //$("#hsplitter").wijsplitter({ sized: function () { chart.redraw(); } });
-    var ride_info;
-    $.getJSON('<% api_url %>/v1/ride/<% user_id %>/<% ride_id %>?callback=?', function(data) {
-                 ride_info = data;
-                 //alert ( ride_info.miles_per_kwh );
-            });
-
-    $.getJSON('<% api_url%>/v1/points/<% user_id %>/<% ride_id %>?limit_points=200&callback=?', function(data) {
-    
+function processData() {
+    console.log ( ride_info );
+    console.log ( points_data );
     var rideCoords = new Array();
-    var numGPSPoints = data.lat.length;
+    var numGPSPoints = points_data.lat.length;
+    //alert ( numGPSPoints );
     var coordsHash = {};
     var myOptions = {
         zoom: 1,
@@ -69,28 +66,78 @@ $(document).ready(function() {
     var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 
     for ( var i = 0; i < numGPSPoints; i++ ) {
-        var coord = new google.maps.LatLng ( data.lat[i][1], data.lon[i][1] );
+        var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
         rideCoords.push ( coord );
-        var s = "X" + data.lat[i][0];
+        var s = "X" + points_data.time[i] * 1000;
         coordsHash[s] = coord;
     }
+    //console.log ( coordsHash );
 
+    var limitPoints = 200;
     var seriesArray = new Array();
-    for ( var metric in data ) {
-        if ( ( metric == "lat" ) || ( metric == "lon" ) || ( metric == "bearing" ) ) {
-            continue;
+    var should_fetch = false;
+    var mod = numGPSPoints / limitPoints;
+    var lastInt = -1;
+    var count = 0;
+    var avgCount = 0;
+
+    var seriesHash = {};
+
+    var fields = new Array ( 'battery_volts', 'battery_amps', 'watts', 'wh', 'whPerMile', 'milesPerKWh', 'speed_gps', 'speed_sensor' );
+
+    $.each ( fields, function ( index, value ) {
+        console.log ( "index: " + index + ", value: " + value );
+        seriesHash[value] = new Array();
+    } );
+
+    for ( var i = 0; i < numGPSPoints; i++ ) {
+        var tmp = Math.floor ( i / mod );
+        if ( tmp != lastInt ) {
+            //alert ( "i: " + i + ", tmp: " + tmp + ", lastInt: " + lastInt + ", setting should_fetch to true" );
+            should_fetch = true;
+            lastInt = tmp;
+        } else {
+            //alert ( "i: " + i + ", tmp: " + tmp + ", lastInt: " + lastInt + ", setting should_fetch to false" );
+            should_fetch = false;
         }
-        var series = { data: data[metric], type: 'line', name: metric };
-        if ( metric == "altitude" ) {
-            series.yAxis = 1;
-        } else if ( metric == "watts" ) {
-            series.yAxis = 2;
-        } else if ( metric == "distance_gps_delta" ) {
-            series.yAxis = 3;
+
+        if ( should_fetch ) {
+            $.each ( fields, function ( index, value ) {
+                if ( ! seriesHash[value] ) {
+                    seriesHash[value] = new Array();
+                }
+                seriesHash[value].push ( [ points_data.time[i] * 1000, points_data[value][i] ] );
+            } );
         }
-        seriesArray.push ( series );
     }
-    seriesArray.sort ( sortBySeriesName );
+
+    $.each ( fields, function ( index, value ) {
+        seriesArray.push ( { data: seriesHash[value], type: 'line', name: value } );
+    } );
+
+
+
+/*
+            for ( var metric in points_data ) {
+                if ( ( metric == "lat" ) || ( metric == "lon" ) || ( metric == "bearing" ) ) {
+                    continue;
+                }
+                if ( metric != "battery_amps" ) {
+                    continue;
+                }
+                var series = { points_data: points_data[metric], type: 'line', name: metric };
+                if ( metric == "altitude" ) {
+                    series.yAxis = 1;
+                } else if ( metric == "watts" ) {
+                    series.yAxis = 2;
+                } else if ( metric == "distance_gps_delta" ) {
+                    series.yAxis = 3;
+                }
+                seriesArray.push ( series );
+            }
+            seriesArray.sort ( sortBySeriesName );
+*/
+
 
     var rideLine = new google.maps.Polyline ( {
         path: rideCoords,
@@ -99,14 +146,14 @@ $(document).ready(function() {
         strokeWeight: 2
     } );
     var startMarker = new google.maps.Marker ( {
-        position: new google.maps.LatLng ( data.lat[0][1], data.lon[0][1] ),
+        position: new google.maps.LatLng ( points_data.lat[0], points_data.lon[0] ),
         animation: google.maps.Animation.DROP,
         title: "Start",
         icon: "http://motoviz.funkware.com/images/motorcycle.png",
 
     });
     var endMarker = new google.maps.Marker ( {
-        position: new google.maps.LatLng ( data.lat[numGPSPoints - 1][1], data.lon[numGPSPoints - 1][1] ),
+        position: new google.maps.LatLng ( points_data.lat[numGPSPoints - 1], points_data.lon[numGPSPoints - 1] ),
         animation: google.maps.Animation.DROP,
         title: "End",
         icon: "http://motoviz.funkware.com/images/parking.png",
@@ -176,6 +223,7 @@ $(document).ready(function() {
                   s += '<br/>'+ point.series.name +': '+ point.y;
               });
               var index = "X" + this.x;
+              //alert ( index );
               pointMarker.setPosition ( coordsHash[index] );
               pointMarker.setVisible ( true );
               return s;
@@ -188,6 +236,7 @@ $(document).ready(function() {
       },
       series: seriesArray
     });
+    console.log ( chart );
 
             /*
              * google maps
@@ -196,9 +245,25 @@ $(document).ready(function() {
         rideLine.setMap ( map );
         startMarker.setMap ( map );
         endMarker.setMap ( map );
-    });
-   
+}
+
+
+
+$(document).ready(function() {
+    //$("#hsplitter").wijsplitter({ orientation: "horizontal", fullSplit: true });
+    //$("#hsplitter").wijsplitter({ sized: function () { chart.redraw(); } });
+    $.when ( 
+        $.getJSON('<% api_url %>/v1/ride/<% user_id %>/<% ride_id %>?callback=?', function(data) {
+            ride_info = data;
+            //alert ( ride_info.miles_per_kwh );
+        }),
+        $.getJSON('<% ui_url%>/newpoints/<% user_id %>/<% ride_id %>/motoviz_output.out.client.json', function(data) {
+            points_data = data;
+        }))
+        .then ( processData )
+        .fail ( function() { alert ( 'one or more requests failed' ) } );
 });
+   
     </script>
   </head>
   <body>
