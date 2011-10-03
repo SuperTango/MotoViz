@@ -55,6 +55,12 @@ sub generateOutputFile {
         return { code => -1, message => 'failed to open output_meta log file for writing: ' . $output_meta_file . '. Error: ' . $! };
     }
 
+    my $new_data_fh;
+    my $new_data_file = $output_file . '.client.json';
+    if ( ! open ( $new_data_fh, '>', $new_data_file ) ) {
+        return { code => -1, message => 'failed to open new_data log file for writing: ' . $new_data_file . '. Error: ' . $! };
+    }
+
     my $ride_data = {
         'lat_min' => 1000,
         'lat_max' => -1000,
@@ -74,6 +80,25 @@ sub generateOutputFile {
 
     my $speed_total;
     my $ret;
+    my $new_data = { 
+        battery_amps => [],
+        battery_volts => [],
+        battery_watt_hours => [],
+        distance_gps_delta => [],
+        distance_gps_total => [],
+        distance_sensor_delta => [],
+        lat => [],
+        lon => [],
+        milesPerKWh => [],
+        speed_gps => [],
+        speed_sensor => [],
+        time => [],
+        time_diff => [],
+        watts => [],
+        wh => [],
+        whPerMile => [],
+    };
+
     while ( $ret = $self->{'input_processor'}->getNextRecord() ) {
         if ( $ret->{'code'} == 0 ) {
                 
@@ -87,6 +112,14 @@ sub generateOutputFile {
             #}
             #my $new_ride = schema->resultset('Ride')->create( $ride_data );
 
+            print $new_data_fh to_json ( $new_data );
+            close ( $new_data_fh );
+
+            $ride_data->{'speed_avg'} = $speed_total / $ride_data->{'points_count'};
+            $ride_data->{'wh_per_mile'} = $ride_data->{'wh_total'} / $ride_data->{'distance_gps_total'};
+            $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
+            debug ( 'ride_data: ' . pp ( $ride_data ) );
+
                 #
                 # needed for file datastore
                 #
@@ -95,6 +128,10 @@ sub generateOutputFile {
         }
         my $record = $ret->{'data'};
         next if ( ! $record->{'lat'} );
+        foreach my $key ( keys ( %{$new_data} ) ) {
+            my $value = $record->{$key} || 0;
+            push ( @{$new_data->{$key}}, $value + 0 );
+        }
 
         if ( exists ( $record->{'lat'} ) ) {
             $ride_data->{'lat_min'} = $record->{'lat'} if ( $record->{'lat'} < $ride_data->{'lat_min'} );
@@ -124,11 +161,6 @@ sub generateOutputFile {
 
         print $output_fh to_json ( $record, { pretty => 0, canonical => 1 } ). "\n";
     }
-
-    $ride_data->{'speed_avg'} = $speed_total / $ride_data->{'points_count'};
-    $ride_data->{'wh_per_mile'} = $ride_data->{'wh_total'} / $ride_data->{'distance_gps_total'};
-    $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
-    debug ( 'ride_data: ' . pp ( $ride_data ) );
-    return { code => 1, message => 'success' };
+    return { code => -1, message => 'should never get here!' };
 }
 1;
