@@ -127,7 +127,7 @@ post '/v1/ride/:user_id' => sub {
         return "Problem uploading file: " . pp ( $ret );
     }
     $ret = process_files ( $user_id, $ride_id, $input_processor, $title, $public );
-    debug ( "caFileProcessor returns: " . pp ( $ret ) );
+    debug ( "fileProcessor returns: " . pp ( $ret ) );
     if ( $ret->{'code'} > 0 ) {
         status 201;
         header 'Location' => setting ( 'api_url' ) . '/v1/ride/' . $user_id . '/' . $ride_id;
@@ -211,11 +211,11 @@ sub fetch_points_average {
         push ( @{$data->{'lat'}}, [ $time, ( $raw_point->{'lat'} ) ? $raw_point->{'lat'} + 0 : 0 ] );
         push ( @{$data->{'lon'}}, [ $time, ( $raw_point->{'lon'} ) ? $raw_point->{'lon'} + 0 : 0 ] );
         if ( $should_fetch ) {
-            debug ( "avgCount: " . $avgCount );
+            #debug ( "avgCount: " . $avgCount );
             foreach my $metric ( @{$metrics} ) {
                 if ( ( $metric ne 'lat' ) && ( $metric ne 'lon' ) ) {
                     my $avg = $sums->{$metric} / $avgCount;
-                    debug ( $metric . ', ' . $sums->{$metric} . ', avgCount: ' . $avgCount . ', avg: ' . $avg );
+                    #debug ( $metric . ', ' . $sums->{$metric} . ', avgCount: ' . $avgCount . ', avg: ' . $avg );
                     push ( @{$data->{$metric}}, [ $time, ( $avg ) ? $avg + 0 : 0 ] );
                 }
             }
