@@ -51,6 +51,13 @@ div#map_canvas{
 
 var chart;
 var ride_info;
+var ride_info2 = {
+    lat_min: 1000,
+    lat_max: -1000,
+    lon_min: 1000,
+    lon_max: -1000,
+};
+
 var points_data;
 
 function sortBySeriesName ( a, b ) {
@@ -66,24 +73,14 @@ function sortBySeriesName ( a, b ) {
 
 function processData() {
     console.log ( ride_info );
-    console.log ( points_data );
     var rideCoords = new Array();
     var numGPSPoints = points_data.lat.length;
-    //alert ( numGPSPoints );
     var coordsHash = {};
     var myOptions = {
         zoom: 1,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-
-    for ( var i = 0; i < numGPSPoints; i++ ) {
-        var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
-        rideCoords.push ( coord );
-        var s = "X" + points_data.time[i] * 1000;
-        coordsHash[s] = coord;
-    }
-    //console.log ( coordsHash );
 
     var limitPoints = 50;
     var seriesArray = new Array();
@@ -106,11 +103,32 @@ function processData() {
         { metric: 'speed_sensor', name: 'Speed(Sensor)' } );
 
     $.each ( fields, function ( index, value ) {
-        console.log ( "index: " + index + ", value: " + value );
         seriesHash[value.metric] = new Array();
     } );
 
     for ( var i = 0; i < numGPSPoints; i++ ) {
+            // setup rideCoords, the line on the map
+        var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
+        rideCoords.push ( coord );
+
+            // setup coordsHash, which is used to translate from chart to map 
+        var s = "X" + points_data.time[i] * 1000;
+        coordsHash[s] = coord;
+
+            // calc map bounds
+        if ( points_data.lat[i] < ride_info2.lat_min ) {
+            ride_info2.lat_min = points_data.lat[i];
+        }
+        if ( points_data.lon[i] < ride_info2.lon_min ) {
+            ride_info2.lon_min = points_data.lon[i];
+        }
+        if ( points_data.lat[i] > ride_info2.lat_max ) {
+            ride_info2.lat_max = points_data.lat[i];
+        }
+        if ( points_data.lon[i] > ride_info2.lon_max ) {
+            ride_info2.lon_max = points_data.lon[i];
+        }
+            // Now calculate which points to put in the graph
         var tmp = Math.floor ( i / mod );
         if ( tmp != lastInt ) {
             //alert ( "i: " + i + ", tmp: " + tmp + ", lastInt: " + lastInt + ", setting should_fetch to true" );
@@ -130,6 +148,7 @@ function processData() {
             } );
         }
     }
+    console.log ( ride_info2 );
 
     $.each ( fields, function ( index, value ) {
         seriesArray.push ( { data: seriesHash[value.metric], type: 'line', name: value.name } );
@@ -261,7 +280,7 @@ function processData() {
             /*
              * google maps
              */
-        map.fitBounds ( new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info.lat_min, ride_info.lon_min ), new google.maps.LatLng ( ride_info.lat_max, ride_info.lon_max ) ) );
+        map.fitBounds ( new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info2.lat_min, ride_info2.lon_min ), new google.maps.LatLng ( ride_info2.lat_max, ride_info2.lon_max ) ) );
         rideLine.setMap ( map );
         startMarker.setMap ( map );
         endMarker.setMap ( map );
