@@ -4,6 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>MotoViz</title>
     <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/flexigrid.pack.css" />
 
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 
@@ -15,6 +16,7 @@
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/themes/grid.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/modules/exporting.js"></script>
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
+<script type="text/javascript" src="<% ui_url%>/javascripts/flexigrid.pack.js"></script>
 
 <style type="text/css">
 html { 
@@ -46,6 +48,9 @@ div#map_canvas{
     width: 100%;
     height: 50%;
 }
+th {
+    text-align:right;
+}
 </style>
 
 <script type="text/javascript">
@@ -57,16 +62,18 @@ var ride_info2 = {
     lat_max: -1000,
     lon_min: 1000,
     lon_max: -1000,
-    speed_gps_max: 0,
-    speed_sensor_max: 0,
+    speed_gps_max: Number.MIN_VALUE,
+    speed_sensor_max: Number.MIN_VALUE,
     distance_gps_total: 0,
     distance_sensor_total: 0,
-    current_max: 0,
-    current_min: 0,
-    power_max: 0,
-    power_min: 0,
-    volts_max: 0,
-    volts_min: 0,
+    current_max: Number.MIN_VALUE,
+    current_min: Number.MAX_VALUE,
+    power_max: Number.MIN_VALUE,
+    power_min: Number.MAX_VALUE,
+    volts_max: Number.MIN_VALUE,
+    volts_min: Number.MAX_VALUE,
+    wh_used: 0,
+    wh_regen: 0,
 };
 
 var points_data;
@@ -97,6 +104,7 @@ function sortBySeriesName ( a, b ) {
 }
 
 function processData() {
+    console.log ( 'Ride info: ' );
     console.log ( ride_info );
     var rideCoords = new Array();
     var numGPSPoints = points_data.lat.length;
@@ -130,6 +138,7 @@ function processData() {
     $.each ( fields, function ( index, value ) {
         seriesHash[value.metric] = new Array();
     } );
+    var whTotal = 0;
 
     for ( var i = 0; i < numGPSPoints; i++ ) {
             // setup rideCoords, the line on the map
@@ -181,12 +190,16 @@ function processData() {
         if ( points_data.battery_volts[i] > ride_info2.volts_max ) {
             ride_info2.volts_max = points_data.battery_volts[i];
         }
-        var watts = points_data.battery_volts[i] * points_data.battery_amps[i];
-        if ( watts < ride_info2.power_min ) {
-            ride_info2.power_min = watts;
+        if ( points_data.watts[i] < ride_info2.power_min ) {
+            ride_info2.power_min = points_data.watts[i];
         }
-        if ( watts > ride_info2.power_max ) {
-            ride_info2.power_max = watts;
+        if ( points_data.watts[i] > ride_info2.power_max ) {
+            ride_info2.power_max = points_data.watts[i];
+        }
+        if ( points_data.wh[i] > 0 ) {
+            ride_info2.wh_used += points_data.wh[i];
+        } else {
+            ride_info2.wh_regen -= points_data.wh[i];
         }
 
             // Now calculate which points to put in the graph
@@ -213,6 +226,23 @@ function processData() {
     ride_info2.date_start = new Date ( ride_info2.time_start * 1000 ).toLocaleString();
     ride_info2.date_end = new Date ( ride_info2.time_end * 1000 ).toLocaleString();
     ride_info2.time_duration = convertSecondsToHuman ( ride_info2.time_end - ride_info2.time_start );
+    ride_info2.wh_total = ride_info2.wh_used - ride_info2.wh_regen;
+    ride_info2.whPerMile = ride_info2.wh_total / ride_info2.distance_gps_total;
+    ride_info2.milesPerKWh = ride_info2.distance_gps_total / ride_info2.wh_total * 1000;
+
+    document.getElementById ( 'table_time_value' ).firstChild.data = ride_info2.date_start;
+    document.getElementById ( 'table_duration_value' ).firstChild.data = ride_info2.time_duration;
+    document.getElementById ( 'table_distance_value' ).firstChild.data = $.sprintf ( "%.03f mi", ride_info2.distance_gps_total );
+    document.getElementById ( 'table_power_value' ).firstChild.data = $.sprintf ( "%.03f W(min) / %.03f W(max)", ride_info2.power_min, ride_info2.power_max );
+    document.getElementById ( 'table_volts_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f", ride_info2.volts_min, ride_info2.volts_max );
+    document.getElementById ( 'table_current_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f", ride_info2.current_min, ride_info2.current_max );
+    document.getElementById ( 'table_wh_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f / %.03f", ride_info2.wh_used, ride_info2.wh_regen, ( ride_info2.wh_used - ride_info2.wh_regen ) );
+    document.getElementById ( 'table_whPerMile_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.whPerMile );
+    document.getElementById ( 'table_milesPerKWh_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.milesPerKWh );
+
+    $(".flexme3").flexigrid({
+        height: 500,
+    });
 
     $.each ( fields, function ( index, value ) {
         seriesArray.push ( { data: seriesHash[value.metric], type: 'line', name: value.name } );
@@ -369,8 +399,51 @@ $(document).ready(function() {
 </head>
 <body>
     <div id="container">
-        <div id="table_container">table</div>
-        <div id="chart_container">chart</div>
+        <div id="table_container">
+            <table id="summary_table" class="flexme3">
+                <tbody>
+                    <tr>
+                        <th width="15%">Start:</th>
+                        <td id=table_time_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>Duration:</th>
+                        <td id=table_duration_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>Distance:</th>
+                        <td id=table_distance_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>Power:</th>
+                        <td id=table_power_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>Volts:</th>
+                        <td id=table_volts_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>Current:</th>
+                        <td id=table_current_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>WattHours (used/regen/total):</th>
+                        <td id=table_wh_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>Wh/mile:</th>
+                        <td id=table_whPerMile_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th>miles/KWh:</th>
+                        <td id=table_milesPerKWh_value>&nbsp;</td>
+                    </tr>
+                </tbody>
+            </table>
+            <script type="text/javascript">
+            </script>
+        </div>
+        <div id="chart_container"></div>
     </div>
     <div id="map_canvas"></div>
 <div id="footer">
