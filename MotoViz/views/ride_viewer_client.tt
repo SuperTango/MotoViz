@@ -14,6 +14,7 @@
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/highcharts.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/themes/grid.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/modules/exporting.js"></script>
+<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
 
 <style type="text/css">
 html { 
@@ -59,6 +60,20 @@ var ride_info2 = {
 };
 
 var points_data;
+
+function convertSecondsToHuman ( seconds ) {
+    var humanString = "";
+    humanString += $.sprintf ( '%02d', Math.floor ( seconds / 3600 ) );
+    humanString += ':';
+    seconds -= Math.floor ( seconds / 3600 ) * 3600;
+
+    humanString += $.sprintf ( '%02d', Math.floor ( seconds / 60 ) );
+    humanString += ':';
+    seconds -= Math.floor ( seconds / 60 ) * 60;
+
+    humanString += $.sprintf ( '%02d', seconds );
+    return humanString;
+}
 
 function sortBySeriesName ( a, b ) {
     if ( a.name < b.name ) {
@@ -115,6 +130,11 @@ function processData() {
         var s = "X" + points_data.time[i] * 1000;
         coordsHash[s] = coord;
 
+        if ( ! ride_info2.time_start ) {
+            ride_info2.time_start = points_data.time[i];
+        }
+        ride_info2.time_end = points_data.time[i];
+
             // calc map bounds
         if ( points_data.lat[i] < ride_info2.lat_min ) {
             ride_info2.lat_min = points_data.lat[i];
@@ -149,6 +169,9 @@ function processData() {
         }
     }
     console.log ( ride_info2 );
+    ride_info2.date_start = new Date ( ride_info2.time_start * 1000 ).toLocaleString();
+    ride_info2.date_end = new Date ( ride_info2.time_end * 1000 ).toLocaleString();
+    ride_info2.time_duration = convertSecondsToHuman ( ride_info2.time_end - ride_info2.time_start );
 
     $.each ( fields, function ( index, value ) {
         seriesArray.push ( { data: seriesHash[value.metric], type: 'line', name: value.name } );
