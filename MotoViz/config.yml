@@ -39,7 +39,7 @@ plugins:
 
 session: "YAML"
 session_dir: "var/sessions"
-session_expires: 3600
+#session_expires: 3600
 
 log_path: "logs"
 
