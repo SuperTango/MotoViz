@@ -95,11 +95,19 @@ function processData() {
 
     var seriesHash = {};
 
-    var fields = new Array ( 'battery_volts', 'battery_amps', 'watts', 'wh', 'whPerMile', 'milesPerKWh', 'speed_gps', 'speed_sensor' );
+    var fields = new Array ( 
+        { metric: 'battery_volts', name: "Volts" }, 
+        { metric: 'battery_amps', name: 'Current' },
+        { metric: 'watts', name: 'Power' },
+        { metric: 'wh', name: 'WattHours' },
+        { metric: 'whPerMile', name: 'WattHours/Mile' },
+        { metric: 'milesPerKWh', name: 'Miles/KWattHour' },
+        { metric: 'speed_gps', name: 'Speed(GPS)' },
+        { metric: 'speed_sensor', name: 'Speed(Sensor)' } );
 
     $.each ( fields, function ( index, value ) {
         console.log ( "index: " + index + ", value: " + value );
-        seriesHash[value] = new Array();
+        seriesHash[value.metric] = new Array();
     } );
 
     for ( var i = 0; i < numGPSPoints; i++ ) {
@@ -115,16 +123,16 @@ function processData() {
 
         if ( should_fetch ) {
             $.each ( fields, function ( index, value ) {
-                if ( ! seriesHash[value] ) {
+                if ( ! seriesHash[value.metric] ) {
                     seriesHash[value] = new Array();
                 }
-                seriesHash[value].push ( [ points_data.time[i] * 1000, points_data[value][i] ] );
+                seriesHash[value.metric].push ( [ points_data.time[i] * 1000, points_data[value.metric][i] ] );
             } );
         }
     }
 
     $.each ( fields, function ( index, value ) {
-        seriesArray.push ( { data: seriesHash[value], type: 'line', name: value } );
+        seriesArray.push ( { data: seriesHash[value.metric], type: 'line', name: value.name } );
     } );
 
 
