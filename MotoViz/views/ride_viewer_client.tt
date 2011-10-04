@@ -92,8 +92,8 @@ function processData() {
 
     var seriesHash = {};
 
-    var fields = new Array ( 
-        { metric: 'battery_volts', name: "Volts" }, 
+    var fields = new Array (
+        { metric: 'battery_volts', name: "Volts" },
         { metric: 'battery_amps', name: 'Current' },
         { metric: 'watts', name: 'Power' },
         { metric: 'wh', name: 'WattHours' },
