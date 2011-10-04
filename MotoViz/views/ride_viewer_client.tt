@@ -57,6 +57,16 @@ var ride_info2 = {
     lat_max: -1000,
     lon_min: 1000,
     lon_max: -1000,
+    speed_gps_max: 0,
+    speed_sensor_max: 0,
+    distance_gps_total: 0,
+    distance_sensor_total: 0,
+    current_max: 0,
+    current_min: 0,
+    power_max: 0,
+    power_min: 0,
+    volts_max: 0,
+    volts_min: 0,
 };
 
 var points_data;
@@ -148,6 +158,37 @@ function processData() {
         if ( points_data.lon[i] > ride_info2.lon_max ) {
             ride_info2.lon_max = points_data.lon[i];
         }
+
+            // calc max/mins
+        if ( points_data.speed_gps[i] > ride_info2.speed_gps_max ) {
+            ride_info2.speed_gps_max = points_data.speed_gps[i];
+        }
+        if ( points_data.speed_sensor[i] > ride_info2.speed_sensor_max ) {
+            ride_info2.speed_sensor_max = points_data.speed_sensor[i];
+        }
+        ride_info2.distance_gps_total += points_data.distance_gps_delta[i];
+        ride_info2.distance_sensor_total += points_data.distance_sensor_delta[i];
+
+        if ( points_data.battery_amps[i] < ride_info2.current_min ) {
+            ride_info2.current_min = points_data.battery_amps[i];
+        }
+        if ( points_data.battery_amps[i] > ride_info2.current_max ) {
+            ride_info2.current_max = points_data.battery_amps[i];
+        }
+        if ( points_data.battery_volts[i] < ride_info2.volts_min ) {
+            ride_info2.volts_min = points_data.battery_volts[i];
+        }
+        if ( points_data.battery_volts[i] > ride_info2.volts_max ) {
+            ride_info2.volts_max = points_data.battery_volts[i];
+        }
+        var watts = points_data.battery_volts[i] * points_data.battery_amps[i];
+        if ( watts < ride_info2.power_min ) {
+            ride_info2.power_min = watts;
+        }
+        if ( watts > ride_info2.power_max ) {
+            ride_info2.power_max = watts;
+        }
+
             // Now calculate which points to put in the graph
         var tmp = Math.floor ( i / mod );
         if ( tmp != lastInt ) {
