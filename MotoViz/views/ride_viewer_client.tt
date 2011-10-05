@@ -57,26 +57,76 @@ th {
 
 var chart;
 var ride_info;
-var ride_info2 = {
-    lat_min: 1000,
-    lat_max: -1000,
-    lon_min: 1000,
-    lon_max: -1000,
-    speed_gps_max: Number.MIN_VALUE,
-    speed_sensor_max: Number.MIN_VALUE,
-    distance_gps_total: 0,
-    distance_sensor_total: 0,
-    current_max: Number.MIN_VALUE,
-    current_min: Number.MAX_VALUE,
-    power_max: Number.MIN_VALUE,
-    power_min: Number.MAX_VALUE,
-    volts_max: Number.MIN_VALUE,
-    volts_min: Number.MAX_VALUE,
-    wh_used: 0,
-    wh_regen: 0,
-};
-
+var map;
 var points_data;
+
+var fields = new Array (
+    { metric: 'battery_volts', name: "Volts" },
+    { metric: 'battery_amps', name: 'Current' },
+    { metric: 'watts', name: 'Power' },
+    { metric: 'wh', name: 'WattHours' },
+    { metric: 'whPerMile', name: 'WattHours/Mile' },
+    { metric: 'milesPerKWh', name: 'Miles/KWattHour' },
+    { metric: 'speed_gps', name: 'Speed(GPS)' },
+    { metric: 'speed_sensor', name: 'Speed(Sensor)' } );
+
+function resetChartSelection() {
+    setStartEnd ( 0, points_data.time.length );
+    chart.$resetButton.remove();
+}
+
+function chartSelection(event) {
+    var chart = this;
+    
+    if (event.xAxis) {
+        var xAxis = event.xAxis[0],
+        min = xAxis.min,
+        max = xAxis.max;
+        document.getElementById ( 'table_time_value' ).firstChild.data = "FOO";
+        var start = -1;
+        var end = -1;
+        for ( var i = 0; i < points_data.lat.length; i++ ) {
+            if ( points_data.time[i] * 1000 < xAxis.min ) {
+                start = i - 1;
+            }
+
+            if ( points_data.time[i] * 1000 < xAxis.max ) {
+                end = i
+            }
+        }
+        console.log ( "min: " + xAxis.min + ", max: " + xAxis.max );
+        console.log ( "start: " + start + ", end: " + end );
+        setStartEnd ( start, end );
+
+        // use jQuery HTML capabilities to add a button to reset the selection 
+        chart.$resetButton = $('<button>Reset view</button>')
+                .css({
+                        position: 'absolute',
+                        top: '30px',
+                        right: '70px',
+                        zIndex: 50
+                })
+                .click(function() {
+                        resetChartSelection();
+                })
+                .appendTo(chart.container);
+        
+        // indicate to the user that something's going on
+        //chart.showLoading();
+        
+        /*
+        // request the data - see http://api.jquery.com/jQuery.get/
+        $.get('drilldown-data.php', {
+            min: Math.round(min),
+            max: Math.round(max)
+        }, function(drillDownData) {
+            onGetNewData(chart, drillDownData);				
+        }, 'json');
+        */
+        
+        return false;
+    }
+}
 
 function convertSecondsToHuman ( seconds ) {
     var humanString = "";
@@ -103,51 +153,36 @@ function sortBySeriesName ( a, b ) {
     return 0;
 }
 
-function processData() {
-    console.log ( 'Ride info: ' );
-    console.log ( ride_info );
-    var rideCoords = new Array();
-    var numGPSPoints = points_data.lat.length;
-    var coordsHash = {};
-    var myOptions = {
-        zoom: 1,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-    var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-
-    var limitPoints = 50;
-    var seriesArray = new Array();
-    var should_fetch = false;
-    var mod = numGPSPoints / limitPoints;
+function setStartEnd ( start, end ) {
+    var limitPoints = 200;
     var lastInt = -1;
-    var count = 0;
-    var avgCount = 0;
-
+    var should_fetch;
+    var mod = ( end - start ) / limitPoints;
     var seriesHash = {};
-
-    var fields = new Array (
-        { metric: 'battery_volts', name: "Volts" },
-        { metric: 'battery_amps', name: 'Current' },
-        { metric: 'watts', name: 'Power' },
-        { metric: 'wh', name: 'WattHours' },
-        { metric: 'whPerMile', name: 'WattHours/Mile' },
-        { metric: 'milesPerKWh', name: 'Miles/KWattHour' },
-        { metric: 'speed_gps', name: 'Speed(GPS)' },
-        { metric: 'speed_sensor', name: 'Speed(Sensor)' } );
+    var ride_info2 = {
+        lat_min: 1000,
+        lat_max: -1000,
+        lon_min: 1000,
+        lon_max: -1000,
+        speed_gps_max: Number.MIN_VALUE,
+        speed_sensor_max: Number.MIN_VALUE,
+        distance_gps_total: 0,
+        distance_sensor_total: 0,
+        current_max: Number.MIN_VALUE,
+        current_min: Number.MAX_VALUE,
+        power_max: Number.MIN_VALUE,
+        power_min: Number.MAX_VALUE,
+        volts_max: Number.MIN_VALUE,
+        volts_min: Number.MAX_VALUE,
+        wh_used: 0,
+        wh_regen: 0,
+    };
 
     $.each ( fields, function ( index, value ) {
         seriesHash[value.metric] = new Array();
     } );
-    var whTotal = 0;
 
-    for ( var i = 0; i < numGPSPoints; i++ ) {
-            // setup rideCoords, the line on the map
-        var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
-        rideCoords.push ( coord );
-
-            // setup coordsHash, which is used to translate from chart to map 
-        var s = "X" + points_data.time[i] * 1000;
-        coordsHash[s] = coord;
+    for ( var i = start; i < end; i++ ) {
 
         if ( ! ride_info2.time_start ) {
             ride_info2.time_start = points_data.time[i];
@@ -205,11 +240,9 @@ function processData() {
             // Now calculate which points to put in the graph
         var tmp = Math.floor ( i / mod );
         if ( tmp != lastInt ) {
-            //alert ( "i: " + i + ", tmp: " + tmp + ", lastInt: " + lastInt + ", setting should_fetch to true" );
             should_fetch = true;
             lastInt = tmp;
         } else {
-            //alert ( "i: " + i + ", tmp: " + tmp + ", lastInt: " + lastInt + ", setting should_fetch to false" );
             should_fetch = false;
         }
 
@@ -221,6 +254,7 @@ function processData() {
                 seriesHash[value.metric].push ( [ points_data.time[i] * 1000, points_data[value.metric][i] ] );
             } );
         }
+
     }
     console.log ( ride_info2 );
     ride_info2.date_start = new Date ( ride_info2.time_start * 1000 ).toLocaleString();
@@ -239,15 +273,46 @@ function processData() {
     document.getElementById ( 'table_wh_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f / %.03f", ride_info2.wh_used, ride_info2.wh_regen, ( ride_info2.wh_used - ride_info2.wh_regen ) );
     document.getElementById ( 'table_whPerMile_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.whPerMile );
     document.getElementById ( 'table_milesPerKWh_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.milesPerKWh );
+    console.log ( document.getElementById ( 'table_milesPerKWh_value' ) );
 
-    $(".flexme3").flexigrid({
-        height: 500,
-    });
+        // set map bounds
+    map.fitBounds ( new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info2.lat_min, ride_info2.lon_min ), new google.maps.LatLng ( ride_info2.lat_max, ride_info2.lon_max ) ) );
 
+    var count = 0;
     $.each ( fields, function ( index, value ) {
-        seriesArray.push ( { data: seriesHash[value.metric], type: 'line', name: value.name } );
+        chart.series[count].setData ( seriesHash[value.metric] );
+        count++;
     } );
+}
 
+function processData() {
+    console.log ( 'Ride info: ' );
+    console.log ( ride_info );
+    var rideCoords = new Array();
+    var numGPSPoints = points_data.lat.length;
+    var coordsHash = {};
+    var myOptions = {
+        zoom: 1,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+
+    var whTotal = 0;
+
+    for ( var i = 0; i < numGPSPoints; i++ ) {
+            // setup rideCoords, the line on the map
+        var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
+        rideCoords.push ( coord );
+            // setup coordsHash, which is used to translate from chart to map 
+        var s = "X" + points_data.time[i] * 1000;
+        coordsHash[s] = coord;
+    }
+
+
+    var seriesArray = new Array();
+    $.each ( fields, function ( index, value ) {
+        seriesArray.push ( { type: 'line', name: value.name } );
+    } );
 
 
 /*
@@ -270,7 +335,6 @@ function processData() {
             }
             seriesArray.sort ( sortBySeriesName );
 */
-
 
     var rideLine = new google.maps.Polyline ( {
         path: rideCoords,
@@ -300,7 +364,10 @@ function processData() {
          renderTo: 'chart_container',
          zoomType: 'x',
          //spacingRight: 20,
-         defaultSeriesType: 'spline',
+         defaultSeriesType: 'line',
+         events: {
+            selection: chartSelection
+        },
       },
        title: {
          text: '<% title %>'
@@ -369,15 +436,19 @@ function processData() {
       },
       series: seriesArray
     });
-    console.log ( chart );
 
-            /*
-             * google maps
-             */
-        map.fitBounds ( new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info2.lat_min, ride_info2.lon_min ), new google.maps.LatLng ( ride_info2.lat_max, ride_info2.lon_max ) ) );
-        rideLine.setMap ( map );
-        startMarker.setMap ( map );
-        endMarker.setMap ( map );
+    setStartEnd ( 0, numGPSPoints );
+    $(".flexme3").flexigrid({
+        height: 500,
+    });
+    console.log ( $(".flexme3" ) );
+
+        /*
+         * google maps
+         */
+    rideLine.setMap ( map );
+    startMarker.setMap ( map );
+    endMarker.setMap ( map );
 }
 
 
