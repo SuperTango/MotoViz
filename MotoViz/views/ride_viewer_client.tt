@@ -32,7 +32,7 @@ body {
 }
 div#container{
     width: 100%;
-    height: 48%;
+    height: 38%;
 }
 div#table_container{
     width: 30%;
@@ -46,7 +46,7 @@ div#chart_container{
 }
 div#map_canvas{
     width: 100%;
-    height: 50%;
+    height: 60%;
 }
 th {
     text-align:right;
@@ -59,6 +59,8 @@ var chart;
 var ride_info;
 var map;
 var points_data;
+var segmentLine;
+//var segmentRectangle;
 
 var fields = new Array (
     { metric: 'battery_volts', name: "Volts" },
@@ -83,7 +85,7 @@ function chartSelection(event) {
         min = xAxis.min,
         max = xAxis.max;
         document.getElementById ( 'table_time_value' ).firstChild.data = "FOO";
-        var start = -1;
+        var start = 0;
         var end = -1;
         for ( var i = 0; i < points_data.lat.length; i++ ) {
             if ( points_data.time[i] * 1000 < xAxis.min ) {
@@ -159,6 +161,7 @@ function setStartEnd ( start, end ) {
     var should_fetch;
     var mod = ( end - start ) / limitPoints;
     var seriesHash = {};
+    var rideCoords = new Array();
     var ride_info2 = {
         lat_min: 1000,
         lat_max: -1000,
@@ -237,6 +240,9 @@ function setStartEnd ( start, end ) {
             ride_info2.wh_regen -= points_data.wh[i];
         }
 
+        var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
+        rideCoords.push ( coord );
+
             // Now calculate which points to put in the graph
         var tmp = Math.floor ( i / mod );
         if ( tmp != lastInt ) {
@@ -276,7 +282,36 @@ function setStartEnd ( start, end ) {
     console.log ( document.getElementById ( 'table_milesPerKWh_value' ) );
 
         // set map bounds
-    map.fitBounds ( new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info2.lat_min, ride_info2.lon_min ), new google.maps.LatLng ( ride_info2.lat_max, ride_info2.lon_max ) ) );
+    var bounds = new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info2.lat_min, ride_info2.lon_min ), new google.maps.LatLng ( ride_info2.lat_max, ride_info2.lon_max ) );
+    map.fitBounds ( bounds );
+
+    if ( segmentLine ) {
+        segmentLine.setMap ( null );
+    }
+
+/*
+    if ( segmentRectangle ) {
+        segmentRectangle.setMap ( null );
+    }
+
+    segmentRectangle = new google.maps.Rectangle ( {
+        bounds: bounds,
+        strokeColor: "#FF00FF",
+        strokeOpacity: 1.0,
+        strokeWeight: 2
+    } );
+    segmentRectangle.setMap ( map );
+*/
+
+    if ( ( start != 0 ) || ( end != points_data.time.length ) ) {
+        segmentLine = new google.maps.Polyline ( {
+            path: rideCoords,
+            strokeColor: "#00FF00",
+            strokeOpacity: 0.9,
+            strokeWeight: 5,
+        } );
+        segmentLine.setMap ( map );
+    }
 
     var count = 0;
     $.each ( fields, function ( index, value ) {
@@ -449,6 +484,10 @@ function processData() {
     rideLine.setMap ( map );
     startMarker.setMap ( map );
     endMarker.setMap ( map );
+    google.maps.event.addListener(rideLine, 'click', function(event) {
+        console.log ( event.latLng );
+    });
+
 }
 
 
