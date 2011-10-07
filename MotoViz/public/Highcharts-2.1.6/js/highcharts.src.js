@@ -6428,6 +6428,12 @@ function Chart (options, callback) {
 								width: mathAbs(xSize),
 								x: (xSize > 0 ? 0 : xSize) + mouseDownX
 							});
+                                                            /*
+                                                             * Hack to allow selection to fire an event
+                                                             */
+                                                        var markerPointStart = axes[0].translate( mouseDownX - plotLeft, true, 0, 0, 1 );
+                                                        var markerPoint = axes[0].translate( chartX - plotLeft, true, 0, 0, 1 );
+                                                        fireEvent ( chart, 'selecting', { point: markerPoint, pointStart: markerPointStart } );
 						}
 						// adjust the height of the selection marker
 						if (selectionMarker && zoomVert) {

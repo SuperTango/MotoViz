@@ -12,7 +12,7 @@
 </script>
 
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-<script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/highcharts.js"></script>
+<script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/highcharts.src.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/themes/grid.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/modules/exporting.js"></script>
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
@@ -59,7 +59,20 @@ var chart;
 var ride_info;
 var map;
 var points_data;
-var segmentLine;
+var pointMarker;
+var coordsHash;
+var selectingLine = new google.maps.Polyline ( {
+    strokeColor: "#FF00FF",
+    strokeOpacity: 1.0,
+    strokeWeight: 4,
+    zIndex: 99,
+} );
+var selectedLine = new google.maps.Polyline ( {
+    strokeColor: "#00FF00",
+    strokeOpacity: 1.0,
+    strokeWeight: 6,
+    zIndex: 98,
+} );
 //var segmentRectangle;
 
 var fields = new Array (
@@ -72,33 +85,64 @@ var fields = new Array (
     { metric: 'speed_gps', name: 'Speed(GPS)' },
     { metric: 'speed_sensor', name: 'Speed(Sensor)' } );
 
+// binary search algorithm mostly lifted from 
+// http://www.dweebd.com/javascript/binary-search-an-array-in-javascript/
+function binarySearch ( arr, find ) {
+    var low = 0;
+    var high = arr.length - 1;
+    var i;
+    var comparison;
+    while (low <= high) {
+        i = Math.floor((low + high) / 2);
+        comparison = arr[i] -  find;
+        if ( comparison < 0 ) { 
+            low = i + 1; 
+            continue; 
+        };
+        if ( comparison > 0 ) { 
+            high = i - 1; 
+            continue;
+        };
+        //console.log ( "returning i: " + i );
+        return i;
+    }
+    //console.log ( "returning i: " + i );
+    return i;
+};
+
 function resetChartSelection() {
-    setStartEnd ( 0, points_data.time.length );
+    setStartEnd ( 0, points_data.time.length, null, true, true );
+    selectedLine.setMap ( null );
+    selectingLine.setMap ( null );
     chart.$resetButton.remove();
 }
 
-function chartSelection(event) {
+function onChartSelecting ( event ) {
+    var indexStart = binarySearch ( points_data.time, event.pointStart / 1000 );
+    var index = binarySearch ( points_data.time, event.point / 1000 );
+    if ( indexStart != index ) {
+        setStartEnd ( indexStart, index, selectingLine, false, false );
+    }
+    pointMarker.setPosition ( points_data.coords[index] );
+    pointMarker.setVisible ( true );
+}
+
+function onChartSelectFinished(event) {
     var chart = this;
+    selecting = false;
+    selectingLine.setMap ( null );
     
     if (event.xAxis) {
         var xAxis = event.xAxis[0],
-        min = xAxis.min,
-        max = xAxis.max;
-        document.getElementById ( 'table_time_value' ).firstChild.data = "FOO";
-        var start = 0;
-        var end = -1;
-        for ( var i = 0; i < points_data.lat.length; i++ ) {
-            if ( points_data.time[i] * 1000 < xAxis.min ) {
-                start = i - 1;
-            }
-
-            if ( points_data.time[i] * 1000 < xAxis.max ) {
-                end = i
-            }
+        min = xAxis.min / 1000,
+        max = xAxis.max / 1000;
+        if ( min != max ) {
+            document.getElementById ( 'table_time_value' ).firstChild.data = "FOO";
+            var start = binarySearch ( points_data.time, min );
+            var end = binarySearch ( points_data.time, max );
+            //console.log ( "min: %f, start: %d, max: %f, end: %d", min, start, max, end );
+            setStartEnd ( start, end, selectedLine, true, true );
         }
-        console.log ( "min: " + xAxis.min + ", max: " + xAxis.max );
-        console.log ( "start: " + start + ", end: " + end );
-        setStartEnd ( start, end );
 
         // use jQuery HTML capabilities to add a button to reset the selection 
         chart.$resetButton = $('<button>Reset view</button>')
@@ -155,13 +199,20 @@ function sortBySeriesName ( a, b ) {
     return 0;
 }
 
-function setStartEnd ( start, end ) {
-    var limitPoints = 200;
+function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
+    if ( start == end ) {
+        return;
+    }
+    if ( end < start ) {
+        var tmp = start;
+        start = end;
+        end = tmp;
+    }
+    var limitPoints = 50;
     var lastInt = -1;
     var should_fetch;
     var mod = ( end - start ) / limitPoints;
     var seriesHash = {};
-    var rideCoords = new Array();
     var ride_info2 = {
         lat_min: 1000,
         lat_max: -1000,
@@ -240,8 +291,6 @@ function setStartEnd ( start, end ) {
             ride_info2.wh_regen -= points_data.wh[i];
         }
 
-        var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
-        rideCoords.push ( coord );
 
             // Now calculate which points to put in the graph
         var tmp = Math.floor ( i / mod );
@@ -262,7 +311,7 @@ function setStartEnd ( start, end ) {
         }
 
     }
-    console.log ( ride_info2 );
+    //console.log ( ride_info2 );
     ride_info2.date_start = new Date ( ride_info2.time_start * 1000 ).toLocaleString();
     ride_info2.date_end = new Date ( ride_info2.time_end * 1000 ).toLocaleString();
     ride_info2.time_duration = convertSecondsToHuman ( ride_info2.time_end - ride_info2.time_start );
@@ -279,15 +328,13 @@ function setStartEnd ( start, end ) {
     document.getElementById ( 'table_wh_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f / %.03f", ride_info2.wh_used, ride_info2.wh_regen, ( ride_info2.wh_used - ride_info2.wh_regen ) );
     document.getElementById ( 'table_whPerMile_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.whPerMile );
     document.getElementById ( 'table_milesPerKWh_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.milesPerKWh );
-    console.log ( document.getElementById ( 'table_milesPerKWh_value' ) );
+    /*
+    $(".flexme3").flexigrid({
+        height: 500,
+    });
+    console.log ( $(".flexme3" ) );
+    */
 
-        // set map bounds
-    var bounds = new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info2.lat_min, ride_info2.lon_min ), new google.maps.LatLng ( ride_info2.lat_max, ride_info2.lon_max ) );
-    map.fitBounds ( bounds );
-
-    if ( segmentLine ) {
-        segmentLine.setMap ( null );
-    }
 
 /*
     if ( segmentRectangle ) {
@@ -302,30 +349,36 @@ function setStartEnd ( start, end ) {
     } );
     segmentRectangle.setMap ( map );
 */
-
-    if ( ( start != 0 ) || ( end != points_data.time.length ) ) {
-        segmentLine = new google.maps.Polyline ( {
-            path: rideCoords,
-            strokeColor: "#00FF00",
-            strokeOpacity: 0.9,
-            strokeWeight: 5,
-        } );
-        segmentLine.setMap ( map );
+    if ( mapLine && ( ( start != 0 ) || ( end != points_data.time.length ) ) ) {
+        var rideCoords = new Array();
+        for ( var i = start; i < end; i++ ) {
+            rideCoords.push ( points_data.coords[i] );
+        }
+        mapLine.setPath ( rideCoords );
+        mapLine.setMap ( map );
     }
 
-    var count = 0;
-    $.each ( fields, function ( index, value ) {
-        chart.series[count].setData ( seriesHash[value.metric] );
-        count++;
-    } );
+    if ( updateMapBounds ) {
+            // set map bounds
+        var bounds = new google.maps.LatLngBounds ( new google.maps.LatLng ( ride_info2.lat_min, ride_info2.lon_min ), new google.maps.LatLng ( ride_info2.lat_max, ride_info2.lon_max ) );
+        map.fitBounds ( bounds );
+    }
+
+    if ( updateChart ) {
+        var count = 0;
+        $.each ( fields, function ( index, value ) {
+            chart.series[count].setData ( seriesHash[value.metric] );
+            count++;
+        } );
+    }
 }
 
 function processData() {
-    console.log ( 'Ride info: ' );
-    console.log ( ride_info );
+    //console.log ( 'Ride info: ' );
+    //console.log ( ride_info );
     var rideCoords = new Array();
     var numGPSPoints = points_data.lat.length;
-    var coordsHash = {};
+    coordsHash = {};
     var myOptions = {
         zoom: 1,
         mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -334,6 +387,7 @@ function processData() {
 
     var whTotal = 0;
 
+    points_data.coords = new Array();
     for ( var i = 0; i < numGPSPoints; i++ ) {
             // setup rideCoords, the line on the map
         var coord = new google.maps.LatLng ( points_data.lat[i], points_data.lon[i] );
@@ -341,6 +395,7 @@ function processData() {
             // setup coordsHash, which is used to translate from chart to map 
         var s = "X" + points_data.time[i] * 1000;
         coordsHash[s] = coord;
+        points_data.coords[i] = coord;
     }
 
 
@@ -390,7 +445,7 @@ function processData() {
         title: "End",
         icon: "http://motoviz.funkware.com/images/parking.png",
     });
-    var pointMarker = new google.maps.Marker( {
+    pointMarker = new google.maps.Marker( {
         map: map,
         visible: false } );
 
@@ -401,17 +456,20 @@ function processData() {
          //spacingRight: 20,
          defaultSeriesType: 'line',
          events: {
-            selection: chartSelection
+            selection: onChartSelectFinished,
+            selecting: onChartSelecting,
         },
       },
        title: {
-         text: '<% title %>'
+         text: ''
       },
+      /*
        subtitle: {
          text: document.ontouchstart === undefined ?
             'Click and drag in the plot area to zoom in' :
             'Drag your finger over the plot to zoom in'
       },
+      */
       xAxis: {
          type: 'datetime',
          maxZoom: 30,
@@ -458,7 +516,7 @@ function processData() {
                   s += '<br/>'+ point.series.name +': '+ point.y;
               });
               var index = "X" + this.x;
-              //alert ( index );
+              //console.log ( index );
               pointMarker.setPosition ( coordsHash[index] );
               pointMarker.setVisible ( true );
               return s;
@@ -472,7 +530,7 @@ function processData() {
       series: seriesArray
     });
 
-    setStartEnd ( 0, numGPSPoints );
+    setStartEnd ( 0, numGPSPoints, null, true, true );
     $(".flexme3").flexigrid({
         height: 500,
     });
