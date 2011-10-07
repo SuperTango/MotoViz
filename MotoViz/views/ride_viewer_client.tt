@@ -476,7 +476,7 @@ function processData() {
     $(".flexme3").flexigrid({
         height: 500,
     });
-    console.log ( $(".flexme3" ) );
+    //console.log ( $(".flexme3" ) );
 
         /*
          * google maps
@@ -510,7 +510,7 @@ $(document).ready(function() {
 <body>
     <div id="container">
         <div id="table_container">
-            <table id="summary_table" class="flexme3">
+            <table id="summary_table" class="flexme2">
                 <tbody>
                     <tr>
                         <th width="15%">Start:</th>
