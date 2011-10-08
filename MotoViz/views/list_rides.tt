@@ -1,3 +1,68 @@
+<link rel="stylesheet" href="/css/flexigrid.pack.css" />
+<script type="text/javascript" src="<% ui_url%>/javascripts/flexigrid.pack.js"></script>
+<script type="text/javascript">
+                function test(com, grid) {
+                        if (com == 'Delete') {
+                                confirm('Delete ' + $('.trSelected', grid).length + ' items?')
+                        } else if (com == 'Add') {
+                                alert('Add New Item');
+                        }
+                }
+
+$(document).ready(function() {
+                $(".rides_table").flexigrid({
+                        url : '<% rides_url %>',
+                        method: 'GET',
+                        dataType : 'json',
+                        colModel : [
+                            {
+                                display : 'Ride Title',
+                                name : 'title',
+                                width : 120,
+                                sortable : true,
+                                align : 'left'
+                            },
+                            {
+                                display : 'Distance',
+                                name : 'distance_gps_total',
+                                width : 40,
+                                sortable : true,
+                                align : 'left'
+                            },
+                        ],
+                        buttons : [ {
+                                name : 'Add',
+                                bclass : 'add',
+                                onpress : test
+                        }, {
+                                name : 'Delete',
+                                bclass : 'delete',
+                                onpress : test
+                        }, {
+                                separator : true
+                        } ],
+                        searchitems : [ {
+                                display : 'ISO',
+                                name : 'iso'
+                        }, {
+                                display : 'Name',
+                                name : 'name',
+                                isdefault : true
+                        } ],
+                        sortname : "iso",
+                        sortorder : "asc",
+                        usepager : true,
+                        //title : 'Countries',
+                        useRp : true,
+                        rp : 15,
+                        showTableToggleBtn : true,
+                        width : 700,
+                        height : 200
+                });
+});
+
+</script>
+<table class="rides_table" style="display: none"></table>
 <% IF ride_info_count == 0 %> 
     No rides have been uploaded
 <% ELSE %>

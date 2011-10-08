@@ -297,11 +297,7 @@ post '/upload' => sub {
 
 };
 
-
-get '/rides' => sub {
-    if ( my $login_page = ensure_logged_in() ) {
-        return $login_page;
-    }
+sub get_ride_infos {
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
     debug ( "URL: " . $url );
     my $ua = LWP::UserAgent->new;
@@ -311,15 +307,75 @@ get '/rides' => sub {
         my $ride_infos = from_json ( $response->decoded_content );
         my @sorted_ride_infos = sort { $a->{'time_start'} <=> $b->{'time_start'} } ( @{$ride_infos} );
         debug ( pp ( \@sorted_ride_infos ) );
+        return { code => 1, response_code => 200, data => \@sorted_ride_infos };
+    } else {
+        return { code => 0, response_code => $response->code() };
+    }
+}
+
+get '/rides' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
+    }
+    my $ret = get_ride_infos();
+    if ( $ret->{'code'} == 1 ) {
         motoviz_template 'list_rides.tt', {
             user => session ( 'user' ),
-            ride_infos => \@sorted_ride_infos,
-            ride_info_count => scalar ( @sorted_ride_infos ),
+            ride_infos => $ret->{'data'},
+            ride_info_count => scalar ( @{$ret->{'data'}} ),
+            rides_url => setting ( "motoviz_ui_url" ) . '/v1/rides',
         };
     } else {
-        if ( $response->code() == 404 ) {
+        if ( $ret->response_code() == 404 ) {
             debug ( "no rides for this user." );
         } else {
+            debug ( "internal error" );
+        }
+    }
+};
+
+get '/v1/points_client/:user_id/:ride_id' => sub {
+    my $ride_id = params->{'ride_id'};
+    my $user_id = params->{'user_id'};
+    my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
+    my $client_json = $ride_path . '/motoviz_output.out.client.json';
+    my $fh;
+    content_type 'application/json';
+    debug ( "client_json: " . $client_json );
+    local $/ = undef;
+    open ( $fh, $client_json ) || die;
+    my $line = <$fh>;
+    return $line;
+};
+
+get '/v1/rides' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        status 401;
+        return "Denied!";
+    }
+    my $ret = get_ride_infos();
+    if ( $ret->{'code'} == 1 ) {
+        my $data = {
+            page => 1, 
+            total => scalar ( @{$ret->{'data'}} ) + 0,
+            rows => [],
+        };
+        my $count = 0;
+        foreach my $ride ( @{$ret->{'data'}} ) {
+            push ( @{$data->{'rows'}}, { 
+                id => $count,
+                cell => $ride
+            } );
+            $count++;
+        }
+        content_type 'application/json';
+        return to_json ( $data );
+    } else {
+        if ( $ret->response_code() == 404 ) {
+            content_type 'application/json';
+            return to_json ( [] );
+        } else {
+            status ( 500 );
             debug ( "internal error" );
         }
     }
