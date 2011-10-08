@@ -202,6 +202,7 @@ function sortBySeriesName ( a, b ) {
 
 function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
     if ( start == end ) {
+        mapLine.setMap ( null );
         return;
     }
     if ( end < start ) {
