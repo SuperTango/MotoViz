@@ -120,9 +120,10 @@ function resetChartSelection() {
 function onChartSelecting ( event ) {
     var indexStart = binarySearch ( points_data.time, event.pointStart / 1000 );
     var index = binarySearch ( points_data.time, event.point / 1000 );
-    if ( indexStart != index ) {
-        setStartEnd ( indexStart, index, selectingLine, false, false );
-    }
+    setStartEnd ( indexStart, index, selectingLine, false, false );
+    //var markerPoint = points_data.coords[index];
+    //console.log ( $.sprintf ( "indexStart: %d, index: %d, markerPoint next line", indexStart, index ) )
+    //console.log ( markerPoint );
     pointMarker.setPosition ( points_data.coords[index] );
     pointMarker.setVisible ( true );
 }
