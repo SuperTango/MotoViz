@@ -51,6 +51,22 @@ div#map_canvas{
 th {
     text-align:right;
 }
+
+tr.alt td {
+    background: #EEEEEE;
+}
+tr.over td {
+    background: #FFEEEE;
+}
+
+#table_container {
+    background: #FFFFFF;
+}
+
+table {
+    font-family: sans-serif;
+    font-size: 12px;
+}
 </style>
 
 <script type="text/javascript">
@@ -548,9 +564,8 @@ function processData() {
         console.log ( event.latLng );
     });
 
+    $(".zstripe tr:even").addClass("alt" );
 }
-
-
 
 $(document).ready(function() {
     $.when ( 
@@ -570,7 +585,7 @@ $(document).ready(function() {
 <body>
     <div id="container">
         <div id="table_container">
-            <table id="summary_table" class="flexme2">
+            <table id="summary_table" class="zstripe">
                 <tbody>
                     <tr>
                         <th width="15%">Start:</th>
