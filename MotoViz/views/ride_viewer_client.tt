@@ -59,6 +59,11 @@ tr.over td {
     background: #FFEEEE;
 }
 
+td.th_title {
+    text-align: right;
+    font-weight: bold;
+}
+
 #table_container {
     background: #FFFFFF;
 }
@@ -66,6 +71,13 @@ tr.over td {
 table {
     font-family: sans-serif;
     font-size: 12px;
+    border: 0;
+    padding: 0;
+    margin: 15;
+}
+
+td {
+    padding: 0;
 }
 </style>
 
@@ -565,15 +577,21 @@ function processData() {
     });
 
     $(".zstripe tr:even").addClass("alt" );
+    $(".zstripe tr").mouseover(function () {
+        $(this).addClass("over")
+    });
+    $(".zstripe tr").mouseout(function () {
+        $(this).removeClass("over")
+    });
 }
 
 $(document).ready(function() {
     $.when ( 
-        $.getJSON('<% ui_url %>/newpoints/<% user_id %>/<% ride_id %>/motoviz_output.out.meta', function(data) {
+        /*$.getJSON('<% ui_url %>/newpoints/<% user_id %>/<% ride_id %>/motoviz_output.out.meta', function(data) {
             ride_info = data;
             //alert ( ride_info.miles_per_kwh );
-        }),
-        $.getJSON('<% ui_url%>/newpoints/<% user_id %>/<% ride_id %>/motoviz_output.out.client.json', function(data) {
+        }),*/
+        $.getJSON('<% ui_url%>/v1/points_client/<% user_id %>/<% ride_id %>', function(data) {
             points_data = data;
         }))
         .then ( processData )
@@ -588,39 +606,39 @@ $(document).ready(function() {
             <table id="summary_table" class="zstripe">
                 <tbody>
                     <tr>
-                        <th width="15%">Start:</th>
+                        <td class=th_title width="15%">Start:</td>
                         <td id=table_time_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>Duration:</th>
+                        <td class=th_title>Duration:</td>
                         <td id=table_duration_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>Distance:</th>
+                        <td class=th_title>Distance:</td>
                         <td id=table_distance_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>Power:</th>
+                        <td class=th_title>Power:</td>
                         <td id=table_power_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>Volts:</th>
+                        <td class=th_title>Volts:</td>
                         <td id=table_volts_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>Current:</th>
+                        <td class=th_title>Current:</td>
                         <td id=table_current_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>WattHours (used/regen/total):</th>
+                        <td class=th_title>WattHours (used/regen/total):</td>
                         <td id=table_wh_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>Wh/mile:</th>
+                        <td class=th_title>Wh/mile:</td>
                         <td id=table_whPerMile_value>&nbsp;</td>
                     </tr>
                     <tr>
-                        <th>miles/KWh:</th>
+                        <td class=th_title>miles/KWh:</td>
                         <td id=table_milesPerKWh_value>&nbsp;</td>
                     </tr>
                 </tbody>
