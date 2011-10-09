@@ -52,13 +52,6 @@ th {
     text-align:right;
 }
 
-tr.alt td {
-    background: #EEEEEE;
-}
-tr.over td {
-    background: #FFEEEE;
-}
-
 td.th_title {
     text-align: right;
     font-weight: bold;
@@ -66,18 +59,6 @@ td.th_title {
 
 #table_container {
     background: #FFFFFF;
-}
-
-table {
-    font-family: helveticaneue-light, "helvetica neue light", "helvetica neue", sans-serif;
-    font-size: 12px;
-    border: 0;
-    padding: 0;
-    margin: 15;
-}
-
-td {
-    padding: 0;
 }
 </style>
 

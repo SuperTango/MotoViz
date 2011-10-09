@@ -187,3 +187,38 @@ text-align: center;
 font-family: sans-serif;
 font-size: 10px;
 }
+
+table {
+    font-family: helveticaneue-light, "helvetica neue light", "helvetica neue", sans-serif;
+    font-size: 12px;
+    border: 0;
+    padding: 0;
+    margin: 15;
+    background: #FFFFFF;
+}
+
+td {
+    padding: 0;
+}
+
+tr.alt td {
+    background: #EEEEEE;
+}
+tr.over td {
+    background: #FFEEEE;
+}
+
+tr.even {
+    background: #FFFFFF;
+}
+tr.odd {
+    background: #EEEEEE;
+}
+
+tbody tr.even:hover {
+        background-color: #ECFFB3;
+}
+
+tbody tr.odd:hover {
+        background-color: #E6FF99;
+}
