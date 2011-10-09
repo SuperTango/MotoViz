@@ -1,112 +1,107 @@
-<link rel="stylesheet" href="/css/flexigrid.pack.css" />
-<script type="text/javascript" src="<% ui_url%>/javascripts/flexigrid.pack.js"></script>
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.dataTables.js"></script>
+<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
 <script type="text/javascript">
-                function test(com, grid) {
-                        if (com == 'Delete') {
-                                confirm('Delete ' + $('.trSelected', grid).length + ' items?')
-                        } else if (com == 'Add') {
-                                alert('Add New Item');
-                        }
-                }
+
+function convertSecondsToHuman ( seconds ) {
+    var humanString = "";
+    humanString += $.sprintf ( '%02d', Math.floor ( seconds / 3600 ) );
+    humanString += ':';
+    seconds -= Math.floor ( seconds / 3600 ) * 3600;
+
+    humanString += $.sprintf ( '%02d', Math.floor ( seconds / 60 ) );
+    humanString += ':';
+    seconds -= Math.floor ( seconds / 60 ) * 60;
+
+    humanString += $.sprintf ( '%02d', seconds );
+    return humanString;
+}
+
 
 $(document).ready(function() {
-                $(".rides_table").flexigrid({
-                        url : '<% rides_url %>',
-                        method: 'GET',
-                        dataType : 'json',
-                        colModel : [
-                            {
-                                display : 'Ride Title',
-                                name : 'title',
-                                width : 120,
-                                sortable : true,
-                                align : 'left'
-                            },
-                            {
-                                display : 'Distance',
-                                name : 'distance_gps_total',
-                                width : 40,
-                                sortable : true,
-                                align : 'left'
-                            },
-                        ],
-                        buttons : [ {
-                                name : 'Add',
-                                bclass : 'add',
-                                onpress : test
-                        }, {
-                                name : 'Delete',
-                                bclass : 'delete',
-                                onpress : test
-                        }, {
-                                separator : true
-                        } ],
-                        searchitems : [ {
-                                display : 'ISO',
-                                name : 'iso'
-                        }, {
-                                display : 'Name',
-                                name : 'name',
-                                isdefault : true
-                        } ],
-                        sortname : "iso",
-                        sortorder : "asc",
-                        usepager : true,
-                        //title : 'Countries',
-                        useRp : true,
-                        rp : 15,
-                        showTableToggleBtn : true,
-                        width : 700,
-                        height : 200
-                });
-
-
     var oTable = $('#rides_datatable').dataTable ( {
-            "sAjaxSource": '<% rides_url %>/dt',
-            "aoColumns": [
-                { sTitle: 'Description' },
-                { sTitle: 'URL' },
-            ],
-            "iDisplayLength": 50,
-            "bLengthChange" : false,
+        "sAjaxSource": '<% rides_url %>',
+        "iDisplayLength": 50,
+        "bLengthChange" : false,
+        "aoColumns": [
+            { "mDataProp": "title",
+              "fnRender": 
+                function ( oObj ) {
+                    return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '">' + oObj.aData.title + '</a>';
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    var date = new Date ( oObj.aData.time_start * 1000 );
+                    return $.sprintf ( "%04d-%02d-%02d<br/>%02d:%02d:%02d", 
+                            date.getFullYear(), ( date.getMonth() + 1), date.getDay(),
+                            date.getHours(), date.getMinutes(), date.getSeconds() );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    var date = new Date ( oObj.aData.time_end * 1000 );
+                    return $.sprintf ( "%04d-%02d-%02d<br/>%02d:%02d:%02d", 
+                            date.getFullYear(), ( date.getMonth() + 1), date.getDay(),
+                            date.getHours(), date.getMinutes(), date.getSeconds() );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return convertSecondsToHuman ( oObj.aData.time_end - oObj.aData.time_start );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.distance_gps_total );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.speed_avg );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.wh_total );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.wh_per_mile );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.miles_per_kwh );
+                } 
+            },
+        ],
     } );
-
 /*
-    $('#rides_datatable2').dataTable( {
-            "aaData": aDataSet,
-            "aoColumns": [
-                    { "sTitle": "Engine" },
-                    { "sTitle": "Browser" },
-                    { "sTitle": "Platform" },
-                    { "sTitle": "Version", "sClass": "center" },
-                    {
-                            "sTitle": "Grade",
-                            "sClass": "center",
-                            "fnRender": function(obj) {
-                                    var sReturn = obj.aData[ obj.iDataColumn ];
-                                    if ( sReturn == "A" ) {
-                                            sReturn = "<b>A</b>";
-                                    }
-                                    return sReturn;
-                            }
-                    }
-            ],
-    } );    
+    $(".zstripe tr:even").addClass("alt" );
+    $(".zstripe tr").mouseover(function () {
+        $(this).addClass("over")
+    });
+    $(".zstripe tr").mouseout(function () {
+        $(this).removeClass("over")
+    });
 */
 });
-
 </script>
-<table id="rides_datatable"></table>
-<table class="rides_table2" style="display: none"></table>
-<% IF ride_info_count == 0 %> 
-    No rides have been uploaded
-<% ELSE %>
-<ul>
-<% FOREACH ride_info IN ride_infos %> 
-    <li>Ride: <% ride_info.title %> <a href="<% ui_url %>/viewer_server/<% ride_info.ride_id %>">Server View</a> <a
-    href="<% ui_url %>/viewer_client/<% ride_info.ride_id %>">Client View</a></a></li>
-<% END %>
-</ul>
-<% END %>
-
+<table id="rides_datatable" cellpadding="3" cellspacing="0" border="0" class="display" width="100%">
+        <thead>
+                <tr>
+                        <th width="35%">Description</th>
+                        <th width="10%">Start</th>
+                        <th width="10%">End</th>
+                        <th width="10%">Duration</th>
+                        <th width="10%">Distance (mi)</th>
+                        <th width="10%">Avg Speed (mi)</th>
+                        <th width="10%">Energy Used (Wh)</th>
+                        <th width="10%">Efficiency (Wh/mi)</th>
+                        <th width="10%">Efficiency (mi/kWh)</th>
+                </tr>
+        </thead>
+        <tbody>
+        </tbody>
+</table>

@@ -348,42 +348,17 @@ get '/v1/points_client/:user_id/:ride_id' => sub {
     return $line;
 };
 
-get '/v1/rides/:type' => sub {
+get '/v1/rides' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         status 401;
         return "Denied!";
     }
-    my $type = params->{'type'};
     my $ret = get_ride_infos();
     my $data;
     my $viewer_url = setting ( "motoviz_ui_url" ) . '/viewer_client/';
     if ( $ret->{'code'} == 1 ) {
-        if ( $type eq 'dt' ) {
-            $data = {};
-            foreach my $ride ( @{$ret->{'data'}} ) {
-                push ( @{$data->{'aaData'}}, [
-                    $ride->{'title'}, 
-                    '<a href="' .  $viewer_url . $ride->{'ride_id'} . '">View</a>',
-                ] );
-            }
-        } else {
-            $data = {
-                page => 1, 
-                total => scalar ( @{$ret->{'data'}} ) + 0,
-                rows => [],
-            };
-            my $count = 0;
-            foreach my $ride ( @{$ret->{'data'}} ) {
-                push ( @{$data->{'rows'}}, { 
-                    id => $count,
-                    cell => $ride
-                } );
-                $count++;
-            }
-        }
+        $data = { aaData => $ret->{'data'} };
         content_type 'application/json';
-        my $str = to_json ( $data, { pretty => 1, canonical => 1 }  );
-        debug ( $str );
         return to_json ( $data );
     } else {
         if ( $ret->response_code() == 404 ) {
@@ -413,8 +388,6 @@ get '/viewer_server/:ride_id' => sub {
             ride_id => params->{'ride_id'},
             title => $ride_info->{'title'},
         }, { layout => undef };
-
-
     } else {
         if ( $response->code() == 404 ) {
             debug ( "no rides for this user." );
