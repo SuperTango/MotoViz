@@ -306,7 +306,7 @@ sub get_ride_infos {
     if ( $response->is_success ) {
         my $ride_infos = from_json ( $response->decoded_content );
         my @sorted_ride_infos = sort { $a->{'time_start'} <=> $b->{'time_start'} } ( @{$ride_infos} );
-        debug ( pp ( \@sorted_ride_infos ) );
+        #debug ( pp ( \@sorted_ride_infos ) );
         return { code => 1, response_code => 200, data => \@sorted_ride_infos };
     } else {
         return { code => 0, response_code => $response->code() };
@@ -341,34 +341,49 @@ get '/v1/points_client/:user_id/:ride_id' => sub {
     my $client_json = $ride_path . '/motoviz_output.out.client.json';
     my $fh;
     content_type 'application/json';
-    debug ( "client_json: " . $client_json );
+    #debug ( "client_json: " . $client_json );
     local $/ = undef;
     open ( $fh, $client_json ) || die;
     my $line = <$fh>;
     return $line;
 };
 
-get '/v1/rides' => sub {
+get '/v1/rides/:type' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         status 401;
         return "Denied!";
     }
+    my $type = params->{'type'};
     my $ret = get_ride_infos();
+    my $data;
+    my $viewer_url = setting ( "motoviz_ui_url" ) . '/viewer_client/';
     if ( $ret->{'code'} == 1 ) {
-        my $data = {
-            page => 1, 
-            total => scalar ( @{$ret->{'data'}} ) + 0,
-            rows => [],
-        };
-        my $count = 0;
-        foreach my $ride ( @{$ret->{'data'}} ) {
-            push ( @{$data->{'rows'}}, { 
-                id => $count,
-                cell => $ride
-            } );
-            $count++;
+        if ( $type eq 'dt' ) {
+            $data = {};
+            foreach my $ride ( @{$ret->{'data'}} ) {
+                push ( @{$data->{'aaData'}}, [
+                    $ride->{'title'}, 
+                    '<a href="' .  $viewer_url . $ride->{'ride_id'} . '">View</a>',
+                ] );
+            }
+        } else {
+            $data = {
+                page => 1, 
+                total => scalar ( @{$ret->{'data'}} ) + 0,
+                rows => [],
+            };
+            my $count = 0;
+            foreach my $ride ( @{$ret->{'data'}} ) {
+                push ( @{$data->{'rows'}}, { 
+                    id => $count,
+                    cell => $ride
+                } );
+                $count++;
+            }
         }
         content_type 'application/json';
+        my $str = to_json ( $data, { pretty => 1, canonical => 1 }  );
+        debug ( $str );
         return to_json ( $data );
     } else {
         if ( $ret->response_code() == 404 ) {
