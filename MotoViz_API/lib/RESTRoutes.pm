@@ -65,6 +65,23 @@ get '/v1/points/:user_id/:ride_id' => sub {
     return return_json ( $ret );
 };
 
+del '/v1/ride/:user_id/:ride_id' => sub {
+    my $ride_path = setting ( 'raw_log_dir' ) . '/' . params->{'user_id'} . '/' . params->{'ride_id'};
+    if ( ! -d $ride_path ) {
+        status 'not_found';
+        return;
+    }
+    eval { 
+        rmtree ( $ride_path ) 
+    };
+    if ( $@ ) {
+        error $@;
+        status 500;
+    } else {
+        status 204;
+    }
+};
+
 get '/v1/ride/:user_id/:ride_id' => sub {
     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
     if ( ! $ride_info ) {

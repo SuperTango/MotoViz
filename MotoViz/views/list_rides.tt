@@ -75,6 +75,12 @@ $(document).ready(function() {
                     return $.sprintf ( "%.03f", oObj.aData.miles_per_kwh );
                 } 
             },
+            {
+              "fnRender": 
+                function ( oObj ) {
+                    return '<a href="' + '/delete_ride/' + oObj.aData.ride_id + '">delete</a>';
+                } 
+            },
         ],
     } );
 /*
@@ -100,6 +106,7 @@ $(document).ready(function() {
                         <th width="10%">Energy Used (Wh)</th>
                         <th width="10%">Efficiency (Wh/mi)</th>
                         <th width="10%">Efficiency (mi/kWh)</th>
+                        <th width="10%">delete<th>
                 </tr>
         </thead>
         <tbody>

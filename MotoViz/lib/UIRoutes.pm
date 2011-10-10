@@ -4,6 +4,7 @@ use Data::Dump qw( pp );
 use Data::UUID;
 use File::Path;
 use LWP::UserAgent;
+use HTTP::Request;
 use HTML::Entities;
 
 use MotoViz::UserStore;
@@ -313,25 +314,31 @@ sub get_ride_infos {
     }
 }
 
+sub do_rides_page {
+
+    my $ret = get_ride_infos();
+    my $rides;
+    if ( $ret->{'code'} == 1 ) {
+        $rides = $ret->{'data'};
+    } elsif ( $ret->{'response_code'} == 404 ) {
+        $rides = [];
+    } else {
+        status 500;
+        return 'Error';
+    }
+    motoviz_template 'list_rides.tt', {
+        user => session ( 'user' ),
+        ride_infos => $rides,
+        ride_info_count => scalar ( @{$rides} ),
+        rides_url => setting ( "motoviz_ui_url" ) . '/v1/rides',
+    };
+};
+
 get '/rides' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         return $login_page;
     }
-    my $ret = get_ride_infos();
-    if ( $ret->{'code'} == 1 ) {
-        motoviz_template 'list_rides.tt', {
-            user => session ( 'user' ),
-            ride_infos => $ret->{'data'},
-            ride_info_count => scalar ( @{$ret->{'data'}} ),
-            rides_url => setting ( "motoviz_ui_url" ) . '/v1/rides',
-        };
-    } else {
-        if ( $ret->response_code() == 404 ) {
-            debug ( "no rides for this user." );
-        } else {
-            debug ( "internal error" );
-        }
-    }
+    return do_rides_page();
 };
 
 get '/v1/points_client/:user_id/:ride_id' => sub {
@@ -368,6 +375,36 @@ get '/v1/rides' => sub {
             status ( 500 );
             debug ( "internal error" );
         }
+    }
+};
+
+get '/v1/delete_ride/:ride_id' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
+    }
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
+    debug ( 'calling delete url: ' . $url );
+    my $request = HTTP::Request->new ( 'DELETE', $url );
+    my $ua = LWP::UserAgent->new;
+    my $response = $ua->request ( $request );
+    debug ( pp ( $response ) );
+    status ( $response->code );
+};
+
+get '/delete_ride/:ride_id' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        return $login_page;
+    }
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
+    debug ( 'calling delete url: ' . $url );
+    my $request = HTTP::Request->new ( 'DELETE', $url );
+    my $ua = LWP::UserAgent->new;
+    my $response = $ua->request ( $request );
+    debug ( pp ( $response ) );
+    if ( $response->code == 204 ) {
+        return do_rides_page();
+    } else {
+        status ( $response->code );
     }
 };
 
