@@ -230,6 +230,8 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
         lon_min: 1000,
         lon_max: -1000,
         speed_gps_max: Number.MIN_VALUE,
+        speed_gps_min: Number.MAX_VALUE,
+        speed_gps_avg: 0,
         speed_sensor_max: Number.MIN_VALUE,
         distance_gps_total: 0,
         distance_sensor_total: 0,
@@ -247,6 +249,7 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
         seriesHash[value.metric] = new Array();
     } );
 
+    var speed_gps_total = 0;
     for ( var i = start; i < end; i++ ) {
 
         if ( ! ride_info2.time_start ) {
@@ -272,6 +275,10 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
         if ( points_data.speed_gps[i] > ride_info2.speed_gps_max ) {
             ride_info2.speed_gps_max = points_data.speed_gps[i];
         }
+        if ( points_data.speed_gps[i] < ride_info2.speed_gps_min ) {
+            ride_info2.speed_gps_min = points_data.speed_gps[i];
+        }
+        speed_gps_total += points_data.speed_gps[i];
         if ( points_data.speed_sensor[i] > ride_info2.speed_sensor_max ) {
             ride_info2.speed_sensor_max = points_data.speed_sensor[i];
         }
@@ -329,10 +336,12 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
     ride_info2.wh_total = ride_info2.wh_used - ride_info2.wh_regen;
     ride_info2.whPerMile = ride_info2.wh_total / ride_info2.distance_gps_total;
     ride_info2.milesPerKWh = ride_info2.distance_gps_total / ride_info2.wh_total * 1000;
+    ride_info2.speed_gps_avg = speed_gps_total / points_data.time.length;
 
     document.getElementById ( 'table_time_value' ).firstChild.data = ride_info2.date_start;
     document.getElementById ( 'table_duration_value' ).firstChild.data = ride_info2.time_duration;
     document.getElementById ( 'table_distance_value' ).firstChild.data = $.sprintf ( "%.03f mi", ride_info2.distance_gps_total );
+    document.getElementById ( 'table_speed_value' ).firstChild.data = $.sprintf ( "%.03f(min), %.03f(max), %.03f(avg)", ride_info2.speed_gps_min, ride_info2.speed_gps_max, ride_info2.speed_gps_avg );
     document.getElementById ( 'table_power_value' ).firstChild.data = $.sprintf ( "%.03f W(min) / %.03f W(max)", ride_info2.power_min, ride_info2.power_max );
     document.getElementById ( 'table_volts_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f", ride_info2.volts_min, ride_info2.volts_max );
     document.getElementById ( 'table_current_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f", ride_info2.current_min, ride_info2.current_max );
@@ -597,6 +606,10 @@ $(document).ready(function() {
                     <tr>
                         <td class=th_title>Distance:</td>
                         <td id=table_distance_value>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td class=th_title>Speed:</td>
+                        <td id=table_speed_value>&nbsp;</td>
                     </tr>
                     <tr>
                         <td class=th_title>Power:</td>
