@@ -287,7 +287,7 @@ post '/upload' => sub {
     debug ( "response data: " . pp ( $response ));
     debug ( "ride_id: " . $ride_id );
     if ( $response->code == 201 ) {
-        motoviz_template 'ride_viewer.tt', {
+        motoviz_template 'ride_viewer_client.tt', {
             user_id => session('user')->{'user_id'},
             ride_id => $ride_id,
             title => $title,
