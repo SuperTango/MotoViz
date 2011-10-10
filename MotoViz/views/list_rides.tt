@@ -19,6 +19,7 @@ function convertSecondsToHuman ( seconds ) {
 
 $(document).ready(function() {
     var oTable = $('#rides_datatable').dataTable ( {
+        "aaSorting" : [ [ 1, 'asc' ], [ 0, 'asc' ] ],
         "sAjaxSource": '<% rides_url %>',
         "iDisplayLength": 50,
         "bLengthChange" : false,
