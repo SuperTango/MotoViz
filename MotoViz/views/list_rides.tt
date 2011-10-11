@@ -16,17 +16,39 @@ function convertSecondsToHuman ( seconds ) {
     return humanString;
 }
 
-function preDeleteRide ( rowId ) {
-    console.log ( "rowId: " + rowId );
-    console.log ( oTable );
+function deleteRide ( rowId ) {
     var d2 = oTable.fnGetData ( rowId );
-    console.log ( d2.ride_id );
+    $("#dialog-confirm").dialog ( "option", "buttons", { 
+            "Cancel": function() { 
+                $(this).dialog("close"); 
+            },
+            "Delete" : function() {
+                $.ajax ( {
+                    type: "GET",
+                    url: "<% ui_url %>/v1/delete_ride/" + d2.ride_id,
+                    success: function() {
+                        //console.log ( "Success, deleting row id: " + rowId );
+                        oTable.fnDeleteRow ( rowId );
+                    },
+                    error: function() {
+                        //console.log ( "Error, not deleting row id: " + rowId );
+                        $(this).dialog("close");
+                        $("#dialog-delete_fail").dialog ( {
+                            modal: true,
+                            buttons: {
+                                Ok: function() {
+                                    $( this ).dialog( "close" );
+                                }
+                            },
+                        } );
+                    },
+                } ),
+                $(this).dialog("close"); 
+            },
+        });
+    $( "#dialog-text" ).html( 'Delete ride:<br/><b>"' + d2.title2 + '"</b>?' );
     $( "#dialog-confirm" ).dialog('open');
-    
 }
-
-
-
 
 $(document).ready(function() {
     oTable = $('#rides_datatable').dataTable ( {
@@ -38,10 +60,11 @@ $(document).ready(function() {
             { "mDataProp": "title",
               "fnRender": 
                 function ( oObj ) {
+                    oObj.aData.title2 = oObj.aData.title;
                     return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '">' + oObj.aData.title + '</a>';
-                } 
+                }
             },
-            { "fnRender": 
+            { "fnRender":
                 function ( oObj ) {
                     var date = new Date ( oObj.aData.time_start * 1000 );
                     return $.sprintf ( "%04d-%02d-%02d<br/>%02d:%02d:%02d", 
@@ -90,35 +113,22 @@ $(document).ready(function() {
             {
               "fnRender": 
                 function ( oObj ) {
-                    return '<a href="#" onClick="preDeleteRide( ' + oObj.iDataRow + '); return false;">delete2</a>';
-                            //'<a href="' + '/delete_ride/' + oObj.aData.ride_id + '">delete</a>, ' + 
+                    //return "foo bar ack";
+                    return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '"><span class="ui-icon ui-icon-zoomin"></span></a>' +
+                           '<a href="#" onClick="deleteRide( ' + oObj.iDataRow + '); return false;"><span class="ui-icon ui-icon-trash"></span></a>';
                 } 
             },
         ],
     } );
-/*
-    $(".zstripe tr:even").addClass("alt" );
-    $(".zstripe tr").mouseover(function () {
-        $(this).addClass("over")
+
+    $( "#dialog-confirm" ).dialog('open');
+    var text1 = $( "#dialog-text" ).text();
+    $( "#dialog-confirm" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        height:190,
     });
-    $(".zstripe tr").mouseout(function () {
-        $(this).removeClass("over")
-    });
-    */
-                $( "#dialog-confirm" ).dialog({
-                        autoOpen: false,
-                        resizable: false,
-                        modal: true,
-                        height:170,
-                        buttons: {
-                                "Delete all items": function() {
-                                        $( this ).dialog( "close" );
-                                },
-                                Cancel: function() {
-                                        $( this ).dialog( "close" );
-                                }
-                        }
-                });
 
 });
 </script>
@@ -126,20 +136,30 @@ $(document).ready(function() {
         <thead>
                 <tr>
                         <th width="35%">Description</th>
-                        <th width="10%">Start</th>
-                        <th width="10%">End</th>
-                        <th width="10%">Duration</th>
-                        <th width="10%">Distance (mi)</th>
-                        <th width="10%">Avg Speed (mi)</th>
-                        <th width="10%">Energy Used (Wh)</th>
-                        <th width="10%">Efficiency (Wh/mi)</th>
-                        <th width="10%">Efficiency (mi/kWh)</th>
-                        <th width="10%">delete<th>
+                        <th width="7%">Start</th>
+                        <th width="7%">End</th>
+                        <th width="7%">Duration</th>
+                        <th width="7%">Distance (mi)</th>
+                        <th width="7%">Avg Speed (mi)</th>
+                        <th width="7%">Energy Used (Wh)</th>
+                        <th width="7%">Efficiency (Wh/mi)</th>
+                        <th width="7%">Efficiency (mi/kWh)</th>
+                        <th width="10%">Action<th>
                 </tr>
         </thead>
         <tbody>
         </tbody>
 </table>
-<div id="dialog-confirm" title="Empty the recycle bin?" style="display: none">
-    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Are you sure?</p>
+<div id="dialog-confirm" title="Delete Ride?" style="display: none">
+    <p>
+        <span class="ui-icon ui-icon-trash" style="float:left; margin:0 7px 20px 0;"></span>
+        <div id="dialog-text"> Are you sure?</div>
+    </p>
 </div>
+<div id="dialog-delete_fail" title="Delete Failed" style="display: none">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>
+        The server returned an error when trying to delete the ride. Please try again later
+    </p>
+</div>
+
