@@ -7,8 +7,7 @@ background-color: #ddd;
 /*background-image: url("/images/perldancer-bg.jpg");*/
 background-repeat: no-repeat;
 background-position: top left;
-
-font-family: "Lucida Grande", "Bitstream Vera Sans", "Verdana";
+font-family: 'Istok Web', sans-serif;
 font-size: 13px;
 color: #333;
 }
@@ -166,7 +165,7 @@ margin-bottom: 5px;
 }
 
 h1, h2, h3, h4, h5 {
-font-family: sans-serif;
+/*font-family: sans-serif;*/
 margin: 1.2em 0 0.6em 0;
 }
 
@@ -184,12 +183,12 @@ clear: both;
 padding-top: 2px;
 text-align: center;
 /*padding-right: 160px;*/
-font-family: sans-serif;
+/*font-family: sans-serif;*/
 font-size: 10px;
 }
 
 table {
-    font-family: helveticaneue-light, "helvetica neue light", "helvetica neue", sans-serif;
+    /*font-family: helveticaneue-light, "helvetica neue light", "helvetica neue", sans-serif;*/
     font-size: 12px;
     border: 0;
     padding: 0;
