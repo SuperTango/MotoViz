@@ -14,9 +14,6 @@ body {
     margin: 0; 
     padding: 0 
 }
-.splitterContainer {
-    height: 100%
-}
 div#container{
     width: 100%;
     height: 38%;
@@ -335,12 +332,6 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
     document.getElementById ( 'table_wh_value' ).firstChild.data = $.sprintf ( "%.03f / %.03f / %.03f", ride_info2.wh_used, ride_info2.wh_regen, ( ride_info2.wh_used - ride_info2.wh_regen ) );
     document.getElementById ( 'table_whPerMile_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.whPerMile );
     document.getElementById ( 'table_milesPerKWh_value' ).firstChild.data = $.sprintf ( "%.03f", ride_info2.milesPerKWh );
-    /*
-    $(".flexme3").flexigrid({
-        height: 500,
-    });
-    console.log ( $(".flexme3" ) );
-    */
 
 
 /*
@@ -538,10 +529,6 @@ function processData() {
     });
 
     setStartEnd ( 0, numGPSPoints, null, true, true );
-    $(".flexme3").flexigrid({
-        height: 500,
-    });
-    //console.log ( $(".flexme3" ) );
 
         /*
          * google maps
