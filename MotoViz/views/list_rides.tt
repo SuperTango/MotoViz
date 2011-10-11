@@ -1,6 +1,7 @@
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.dataTables.js"></script>
 <script type="text/javascript">
 
+var oTable;
 function convertSecondsToHuman ( seconds ) {
     var humanString = "";
     humanString += $.sprintf ( '%02d', Math.floor ( seconds / 3600 ) );
@@ -15,9 +16,20 @@ function convertSecondsToHuman ( seconds ) {
     return humanString;
 }
 
+function preDeleteRide ( rowId ) {
+    console.log ( "rowId: " + rowId );
+    console.log ( oTable );
+    var d2 = oTable.fnGetData ( rowId );
+    console.log ( d2.ride_id );
+    $( "#dialog-confirm" ).dialog('open');
+    
+}
+
+
+
 
 $(document).ready(function() {
-    var oTable = $('#rides_datatable').dataTable ( {
+    oTable = $('#rides_datatable').dataTable ( {
         "aaSorting" : [ [ 1, 'asc' ], [ 0, 'asc' ] ],
         "sAjaxSource": '<% rides_url %>',
         "iDisplayLength": 50,
