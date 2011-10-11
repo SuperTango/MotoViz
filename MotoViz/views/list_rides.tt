@@ -1,5 +1,4 @@
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.dataTables.js"></script>
-<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
 <script type="text/javascript">
 
 function convertSecondsToHuman ( seconds ) {
@@ -79,7 +78,8 @@ $(document).ready(function() {
             {
               "fnRender": 
                 function ( oObj ) {
-                    return '<a href="' + '/delete_ride/' + oObj.aData.ride_id + '">delete</a>';
+                    return '<a href="#" onClick="preDeleteRide( ' + oObj.iDataRow + '); return false;">delete2</a>';
+                            //'<a href="' + '/delete_ride/' + oObj.aData.ride_id + '">delete</a>, ' + 
                 } 
             },
         ],
@@ -92,7 +92,22 @@ $(document).ready(function() {
     $(".zstripe tr").mouseout(function () {
         $(this).removeClass("over")
     });
-*/
+    */
+                $( "#dialog-confirm" ).dialog({
+                        autoOpen: false,
+                        resizable: false,
+                        modal: true,
+                        height:170,
+                        buttons: {
+                                "Delete all items": function() {
+                                        $( this ).dialog( "close" );
+                                },
+                                Cancel: function() {
+                                        $( this ).dialog( "close" );
+                                }
+                        }
+                });
+
 });
 </script>
 <table id="rides_datatable" cellpadding="3" cellspacing="0" border="0" class="display" width="100%">
@@ -113,3 +128,6 @@ $(document).ready(function() {
         <tbody>
         </tbody>
 </table>
+<div id="dialog-confirm" title="Empty the recycle bin?" style="display: none">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Are you sure?</p>
+</div>

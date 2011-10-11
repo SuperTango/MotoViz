@@ -1,22 +1,9 @@
-<!doctype html>
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>MotoViz</title>
-    <link rel="stylesheet" href="/css/style.css" />
-    <link rel="stylesheet" href="/css/flexigrid.pack.css" />
-
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 
-<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false">
-</script>
-
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/highcharts.src.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/themes/grid.js"></script>
 <script type="text/javascript" src="<% ui_url%>/Highcharts-2.1.6/js/modules/exporting.js"></script>
-<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
-<script type="text/javascript" src="<% ui_url%>/javascripts/flexigrid.pack.js"></script>
 
 <style type="text/css">
 html { 
@@ -643,18 +630,4 @@ $(document).ready(function() {
         <div id="chart_container"></div>
     </div>
     <div id="map_canvas"></div>
-<div id="footer">
-<% IF session.user %>
-    Logged in as <% session.user.name %>:  
-    <a href="<% ui_url %>/rides">List Rides</a> |
-    <a href="<% ui_url %>/new_upload">Upload Ride</a> |
-    <a href="<% ui_url %>/update_registration">Update account</a> |
-    <a href="<% ui_url %>/logout">Logout</a>
-<% ELSE %>
-    Not Logged In! <a href="<% ui_url %>/login">Login</a>
-<% END %>
- | Powered by <a href="http://perldancer.org/">Dancer</a> <% dancer_version %>
-</div>
-  </body>
-</html>
 
