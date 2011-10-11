@@ -291,7 +291,7 @@ post '/upload' => sub {
             user_id => session('user')->{'user_id'},
             ride_id => $ride_id,
             title => $title,
-        }, { layout => undef };
+        };
     } else {
         return "Got HTML Response: " . $response->code . "<pre>" . encode_entities ( $response->content ) . "</pre>";
     }
@@ -450,7 +450,7 @@ get '/viewer_client/:ride_id' => sub {
             user_id => session('user')->{'user_id'},
             ride_id => params->{'ride_id'},
             title => $ride_info->{'title'},
-        }, { layout => undef };
+        };
 
 
     } else {
