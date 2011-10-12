@@ -358,7 +358,7 @@ get '/v1/points_client/:user_id/:ride_id' => sub {
 get '/v1/rides' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         status 401;
-        return "Denied!";
+        return "Access Denied!";
     }
     my $ret = get_ride_infos();
     my $data;
@@ -378,12 +378,17 @@ get '/v1/rides' => sub {
     }
 };
 
+post '/v1/update_ride/:ride_id' => sub {
+
+};
+
 get '/v1/delete_ride/:ride_id' => sub {
     if ( my $login_page = ensure_logged_in() ) {
-        return $login_page;
+        status 401;
+        return "Access Denied!";
     }
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
-    debug ( 'calling delete url: ' . $url );
+    debug ( 'calling update url: ' . $url );
     my $request = HTTP::Request->new ( 'DELETE', $url );
     my $ua = LWP::UserAgent->new;
     my $response = $ua->request ( $request );
