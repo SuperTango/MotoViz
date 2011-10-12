@@ -89,6 +89,8 @@ get '/v1/ride/:user_id/:ride_id' => sub {
         return;
     }
     my $params = params;
+    $ride_info->{'ride_url'} = setting ( 'api_url' ) . '/v1/ride/' . params->{'user_id'} . '/' . $ride_info->{'ride_id'};
+    $ride_info->{'points_url'} = setting ( 'api_url' ) . '/v1/points/' . params->{'user_id'} . '/' . $ride_info->{'ride_id'};
     return return_json ( $ride_info );
 };
 

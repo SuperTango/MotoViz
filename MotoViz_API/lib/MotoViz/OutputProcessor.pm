@@ -5,6 +5,7 @@ use Dancer ':syntax';
 use GPS::Point;
 use Time::Local;
 use Data::Dump qw( pp );
+use Algorithm::GooglePolylineEncoding;
 
 use MotoViz::NMEAParser;
 
@@ -99,6 +100,8 @@ sub generateOutputFile {
         whPerMile => [],
     };
 
+    my $latLonArray = [];
+
     while ( $ret = $self->{'input_processor'}->getNextRecord() ) {
         if ( $ret->{'code'} == 0 ) {
                 
@@ -118,6 +121,9 @@ sub generateOutputFile {
             $ride_data->{'speed_avg'} = $speed_total / $ride_data->{'points_count'};
             $ride_data->{'wh_per_mile'} = $ride_data->{'wh_total'} / $ride_data->{'distance_gps_total'};
             $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
+            debug ( pp ( $latLonArray ) );
+            $ride_data->{'map_polyline'} = Algorithm::GooglePolylineEncoding::encode_polyline(@{$latLonArray});
+
             debug ( 'ride_data: ' . pp ( $ride_data ) );
 
                 #
@@ -154,6 +160,7 @@ sub generateOutputFile {
                 }
                 $speed_total += $record->{'speed_gps'};
             }
+            push ( @{$latLonArray}, { lat => $record->{'lat'}, lon => $record->{'lon'} } );
         }
         $ride_data->{'wh_total'} += ( $record->{'battery_watt_hours'} ) ? $record->{'battery_watt_hours'} : 0;
         $ride_data->{'points_count'}++;
