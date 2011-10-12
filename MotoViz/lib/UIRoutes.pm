@@ -11,6 +11,12 @@ use MotoViz::UserStore;
 
 our $VERSION = '0.1';
 
+my $acceptable_emails = {
+    'kginaven@gmail.com' => 1,
+    'elec.bike@gmail.com' => 1,
+    'altitude@funkware.com' => 1,
+};
+
 before sub {
     debug ( pp ( session ) );
     if ( request->path ne '/login' ) {
@@ -117,6 +123,10 @@ any ['get', 'post'] => '/register' => sub {
             if ( $ret->{'data'} ) {
                 push ( @errors, "A user with the specified email address already exists" );
             }
+        }
+
+        if ( ! $acceptable_emails->{params->{'email'}} ) {
+            push ( @errors, "Sorry, this user is not allowed to register at this time. Please contact Alex for more information" );
         }
 
         if ( @errors ) {

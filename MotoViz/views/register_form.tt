@@ -1,6 +1,20 @@
+<style type="text/css">
+#BETA_ONLY {
+    color: #CC0000;
+    font-weight: bold;
+    font-size: 125%;
+}
+#reg_failed {
+    color: red;
+}
+</style>
+<div id="BETA_ONLY">
+    <p>Please Note: EVVisualizer is in Alpha. Only certain people are allowed to register at this time</p>
+</div>
 <form action="<% ui_url %>/register" method=post>
 Please register. All fields are required.
 <% IF errors %>
+<div id="reg_failed">
 <h2>Registration Failed.</h2>
 The following errors occurred:
 <ul>
@@ -9,7 +23,7 @@ The following errors occurred:
     <% END %>
 </ul>
 <% END %>
-
+</div>
 <dl>
     <dt>Name</dt></dt>
     <dd><input type="text" name="name" value="<% user.name %>"></dd>
