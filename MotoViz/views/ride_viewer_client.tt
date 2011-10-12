@@ -511,7 +511,7 @@ function processData() {
               var s = '<b>'+ dateObj.toString() +'</b>';
              
               $.each(this.points, function(i, point) {
-                  s += '<br/>'+ point.series.name +': '+ point.y;
+                  s += '<br/>'+ point.series.name +': '+ $.sprintf ( "%.03f", point.y );
               });
               var index = "X" + this.x;
               //console.log ( index );
