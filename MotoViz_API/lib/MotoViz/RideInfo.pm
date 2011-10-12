@@ -43,12 +43,13 @@ sub updateRideInfo {
     my $ride_data = shift;
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
     my $ride_file = $ride_path . '/motoviz_output.out.meta';
-    my $tmp_file = $ride_file . '/tmp';
+    my $tmp_file = $ride_file . '.tmp';
     debug ( 'user_id: ' . $user_id );
     debug ( 'ride_id: ' . $ride_id );
     debug ( 'ride_path: ' . $ride_path );
     my $output_meta_fh;
     if ( ! open ( $output_meta_fh, '>', $tmp_file ) ) {
+        error ( "coudn't open tmp file: $!" );
         return undef;
     }
     print $output_meta_fh to_json ( $ride_data, { pretty => 1, canonical => 1 } );
@@ -56,6 +57,7 @@ sub updateRideInfo {
     close ( $output_meta_fh );
 
     if ( ! rename ( $tmp_file, $ride_file ) ) {
+        error ( "coudn't rename tmp file: '$tmp_file', $!" );
         return undef;
     }
     return 1;

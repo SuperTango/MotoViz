@@ -54,7 +54,8 @@ function deleteRide ( rowId ) {
 function editRide ( rowId ) {
     console.log ( "In editRide" );
     var d2 = oTable.fnGetData ( rowId );
-    $("#dialog-edit_ride").dialog ( "option", "buttons", {
+    $("#dialog-edit_ride").dialog ( 
+            "option", "buttons", {
             "Cancel": function() { 
                 $(this).dialog("close"); 
             },
@@ -63,18 +64,18 @@ function editRide ( rowId ) {
                 var newTitle = $("#uititle").val();
                 console.log ( newTitle );
                 //allFields.removeClass( "ui-state-error" );
-/*
                 $.ajax ( {
                     type: "GET",
-                    url: "<% ui_url %>/v1/delete_ride/" + d2.ride_id,
+                    url: "<% ui_url %>/v1/update_ride/" + d2.ride_id,
+                    data: { "new_title" : $('<div/>').text(newTitle).html() },
                     success: function() {
                         //console.log ( "Success, deleting row id: " + rowId );
-                        oTable.fnDeleteRow ( rowId );
+                        oTable.fnUpdate ( newTitle, rowId, 0 );
                     },
                     error: function() {
                         //console.log ( "Error, not deleting row id: " + rowId );
                         $(this).dialog("close");
-                        $("#dialog-delete_fail").dialog ( {
+                        $("#dialog-update_fail").dialog ( {
                             modal: true,
                             buttons: {
                                 Ok: function() {
@@ -84,7 +85,6 @@ function editRide ( rowId ) {
                         } );
                     },
                 } ),
-                */
                 $(this).dialog("close"); 
             },
         });
@@ -108,10 +108,12 @@ $(document).ready(function() {
                     return '<a href="' + oObj.aData.viewUrl + '">' + oObj.aData.title + '</a>';
                 }
             },
-            { "fnRender":
+            { 
+                "bSortable": false,
+                "fnRender":
                 function ( oObj ) {
                     var str = '<a href="' + oObj.aData.viewUrl + '">' + 
-                    '<img border=1 src="http://maps.googleapis.com/maps/api/staticmap?size=150x75&sensor=false&' +
+                    '<img border=1 src="http://maps.googleapis.com/maps/api/staticmap?size=125x50&sensor=false&' +
                             'markers=color:green|size:small|' + oObj.aData.lat_start + ',' + oObj.aData.lon_start + '&' +
                             'markers=color:red|size:small|' + oObj.aData.lat_end + ',' + oObj.aData.lon_end + '&' +
                             'path=weight:3|color:0xFF0000EE|enc:' + oObj.aData.map_polyline + '"></a>';
@@ -165,7 +167,8 @@ $(document).ready(function() {
                 } 
             },
             {
-              "fnRender": 
+                "bSortable": false,
+                "fnRender": 
                 function ( oObj ) {
                     //return "foo bar ack";
                     return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '"><span class="ui-icon ui-icon-zoomin"></span></a>' +
@@ -189,6 +192,14 @@ $(document).ready(function() {
         resizable: false,
         modal: true,
         height:300,
+        "open" : function() {
+            $(this).parents('.ui-dialog-buttonpane button:eq(1)').focus(); 
+        },
+    });
+    $('#dialog-edit_ride').live('keyup', function(e){
+        if (e.keyCode == 13) {
+            $(':button:contains("Save")').click();
+        }
     });
 
 });
@@ -222,6 +233,12 @@ $(document).ready(function() {
     <p>
         <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>
         The server returned an error when trying to delete the ride. Please try again later
+    </p>
+</div>
+<div id="dialog-update_fail" title="Update Failed" style="display: none">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>
+        The server returned an error when trying to update the ride. Please try again later
     </p>
 </div>
 <div id="dialog-edit_ride" title="Edit Ride" style="display: none">

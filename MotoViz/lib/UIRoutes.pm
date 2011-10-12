@@ -378,8 +378,21 @@ get '/v1/rides' => sub {
     }
 };
 
-post '/v1/update_ride/:ride_id' => sub {
-
+any [ 'get', 'post' ] => '/v1/update_ride/:ride_id' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        status 401;
+        return "Access Denied!";
+    }
+    my $new_title = params->{'new_title'};
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
+    my $request = HTTP::Request->new ( 'PUT', $url );
+    $request->header ( "Content-Type" => "application/json" );
+    $request->content ( to_json ( { "title" => $new_title } ) );
+        # TODO: Should really do more validation here.
+    my $ua = LWP::UserAgent->new;
+    my $response = $ua->request ( $request );
+    debug ( pp ( $response ) );
+    status ( $response->code );
 };
 
 get '/v1/delete_ride/:ride_id' => sub {

@@ -121,21 +121,26 @@ get '/v1/ride/:user_id' => sub {
 
 put '/v1/ride/:user_id/:ride_id' => sub {
     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+    my $ride_data_new = from_json request->body;
     debug ( "Got here!" );
-    debug ( pp ( params ) );
-    status 200;
-    return '{"ok":1}';
-
+    debug ( pp ( $ride_data_new ) );
     if ( ! $ride_info ) {
         status 'not found';
         return 'not found';
     }
-    my $data = params->{'title'};
+
+    my $new_title = $ride_data_new->{'title'};
+    if ( $new_title ) {
+        $ride_info->{'title'} = $new_title;
+    }
     
-    my $ret = MotoViz::RideInfo::updateRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+    debug ( pp ( $ride_info ) );
+    my $ret = MotoViz::RideInfo::updateRideInfo ( params->{'user_id'}, params->{'ride_id'}, $ride_info );
     if ( $ret ) {
+        debug ( 'update ride info success' );
         status 204;
     } else {
+        debug ( 'update ride info fail' );
         status 500;
     }
 };
