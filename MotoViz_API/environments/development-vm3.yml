@@ -26,5 +26,5 @@ show_errors: 1
 # OR TINY KITTENS SHALL DIE WITH LOTS OF SUFFERING
 auto_reload: 0
 
-api_url: "http://evviz.funkware.com"
+api_url: "http://evviz_api.funkware.com"
 raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz_API/var/raw_log_data"

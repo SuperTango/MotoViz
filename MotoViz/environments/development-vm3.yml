@@ -27,5 +27,5 @@ show_errors: 1
 auto_reload: 0
 
 motoviz_ui_url: "http://evviz.funkware.com"
-motoviz_api_url: "http://evviz.funkware.com"
+motoviz_api_url: "http://evviz_api.funkware.com"
 raw_log_dir: "/funk/home/altitude/MotoViz/MotoViz_API/var/raw_log_data"

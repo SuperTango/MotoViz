@@ -373,6 +373,7 @@ get '/v1/rides' => sub {
     my $ret = get_ride_infos();
     my $data;
     my $viewer_url = setting ( "motoviz_ui_url" ) . '/viewer_client/';
+    debug ( pp ( $ret ) );
     if ( $ret->{'code'} == 1 ) {
         $data = { aaData => $ret->{'data'} };
         content_type 'application/json';
