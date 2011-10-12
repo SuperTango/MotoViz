@@ -52,8 +52,8 @@ function deleteRide ( rowId ) {
 
 
 function editRide ( rowId ) {
-    console.log ( "In editRide" );
     var d2 = oTable.fnGetData ( rowId );
+    console.log ( rowId + ": edit.  Title: " + d2.title2 );
     $("#dialog-edit_ride").dialog ( 
             "option", "buttons", {
             "Cancel": function() { 
@@ -171,10 +171,9 @@ $(document).ready(function() {
                 "bSortable": false,
                 "fnRender": 
                 function ( oObj ) {
-                    //return "foo bar ack";
                     return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '"><span class="ui-icon ui-icon-zoomin"></span></a>' +
-                           '<a href="#" onClick="deleteRide( ' + oObj.iDataRow + '); return false;"><span class="ui-icon ui-icon-trash"></span></a>' +
-                           '<a href="#" onClick="editRide( ' + oObj.iDataRow + '); return false;"><span class="ui-icon ui-icon-pencil"></span></a>';
+                           '<a href="#" onClick="deleteRide( oTable.fnGetPosition ( this.parentNode.parentNode ) );  return false;"><span class="ui-icon ui-icon-trash"></span></a>' +
+                           '<a href="#" onClick="editRide( oTable.fnGetPosition ( this.parentNode.parentNode ) ); return false;"><span class="ui-icon ui-icon-pencil"></span></a>';
                 } 
             },
         ],
