@@ -126,7 +126,7 @@ any ['get', 'post'] => '/register' => sub {
         }
 
         if ( ! $acceptable_emails->{params->{'email'}} ) {
-            push ( @errors, "Sorry, this user is not allowed to register at this time. Please contact Alex for more information" );
+            @errors = ( "Sorry, this user is not allowed to register at this time. Please contact Alex for more information" );
         }
 
         if ( @errors ) {
