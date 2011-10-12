@@ -50,6 +50,49 @@ function deleteRide ( rowId ) {
     $( "#dialog-confirm" ).dialog('open');
 }
 
+
+function editRide ( rowId ) {
+    console.log ( "In editRide" );
+    var d2 = oTable.fnGetData ( rowId );
+    $("#dialog-edit_ride").dialog ( "option", "buttons", {
+            "Cancel": function() { 
+                $(this).dialog("close"); 
+            },
+            "Save" : function() {
+                var bValid = true;
+                var newTitle = $("#uititle").val();
+                console.log ( newTitle );
+                //allFields.removeClass( "ui-state-error" );
+/*
+                $.ajax ( {
+                    type: "GET",
+                    url: "<% ui_url %>/v1/delete_ride/" + d2.ride_id,
+                    success: function() {
+                        //console.log ( "Success, deleting row id: " + rowId );
+                        oTable.fnDeleteRow ( rowId );
+                    },
+                    error: function() {
+                        //console.log ( "Error, not deleting row id: " + rowId );
+                        $(this).dialog("close");
+                        $("#dialog-delete_fail").dialog ( {
+                            modal: true,
+                            buttons: {
+                                Ok: function() {
+                                    $( this ).dialog( "close" );
+                                }
+                            },
+                        } );
+                    },
+                } ),
+                */
+                $(this).dialog("close"); 
+            },
+        });
+    //$( "#dialog-text" ).html( 'Delete ride:<br/><b>"' + d2.title2 + '"</b>?' );
+    $("#uititle").val ( d2.title2 );
+    $( "#dialog-edit_ride" ).dialog('open');
+}
+
 $(document).ready(function() {
     oTable = $('#rides_datatable').dataTable ( {
         "aaSorting" : [ [ 1, 'asc' ], [ 0, 'asc' ] ],
@@ -126,7 +169,8 @@ $(document).ready(function() {
                 function ( oObj ) {
                     //return "foo bar ack";
                     return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '"><span class="ui-icon ui-icon-zoomin"></span></a>' +
-                           '<a href="#" onClick="deleteRide( ' + oObj.iDataRow + '); return false;"><span class="ui-icon ui-icon-trash"></span></a>';
+                           '<a href="#" onClick="deleteRide( ' + oObj.iDataRow + '); return false;"><span class="ui-icon ui-icon-trash"></span></a>' +
+                           '<a href="#" onClick="editRide( ' + oObj.iDataRow + '); return false;"><span class="ui-icon ui-icon-pencil"></span></a>';
                 } 
             },
         ],
@@ -139,6 +183,12 @@ $(document).ready(function() {
         resizable: false,
         modal: true,
         height:190,
+    });
+    $( "#dialog-edit_ride" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        height:300,
     });
 
 });
@@ -174,4 +224,11 @@ $(document).ready(function() {
         The server returned an error when trying to delete the ride. Please try again later
     </p>
 </div>
-
+<div id="dialog-edit_ride" title="Edit Ride" style="display: none">
+    <form>
+        <fieldset>
+            <label for="uititle">Title</label>
+            <input type="text" name="uititle" id="uititle" class="text ui-widget-content ui-corner-all" />
+        </fieldset>
+    </form>
+</div>

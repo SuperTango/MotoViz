@@ -25,7 +25,10 @@ sub return_json {
     if ( ! $options ) {
         $options = {};
     }
-    $options->{'pretty'} ||= ( exists params->{'pretty'} ) ? 1 : 0;
+    if ( ( exists params->{'pretty'} ) || ( exists params->{'sort'} ) ) {
+        $options->{'pretty'} = 1;
+        $options->{'canonical'} = 1;
+    }
     debug ( 'options: ' .  pp ( $options ) );
 
     $ret .= to_json ( $data, $options );
@@ -115,6 +118,28 @@ get '/v1/ride/:user_id' => sub {
     }
     return return_json ( $array );
 };
+
+put '/v1/ride/:user_id/:ride_id' => sub {
+    my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+    debug ( "Got here!" );
+    debug ( pp ( params ) );
+    status 200;
+    return '{"ok":1}';
+
+    if ( ! $ride_info ) {
+        status 'not found';
+        return 'not found';
+    }
+    my $data = params->{'title'};
+    
+    my $ret = MotoViz::RideInfo::updateRideInfo ( params->{'user_id'}, params->{'ride_id'} );
+    if ( $ret ) {
+        status 204;
+    } else {
+        status 500;
+    }
+};
+
 
 post '/v1/ride/:user_id' => sub {
     my $user_id = params->{'user_id'};
