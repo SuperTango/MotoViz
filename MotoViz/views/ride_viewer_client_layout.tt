@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>MotoViz</title>
+    <title>EV Visualizer</title>
     <link rel="stylesheet" href="/css/style.css" />
 
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
@@ -144,14 +144,14 @@ function processData() {
         position: new google.maps.LatLng ( points_data.lat[0], points_data.lon[0] ),
         animation: google.maps.Animation.DROP,
         title: "Start",
-        icon: "http://motoviz.funkware.com/images/motorcycle.png",
+        icon: "http://evvisualizer.funkware.com/images/motorcycle.png",
 
     });
     var endMarker = new google.maps.Marker ( {
         position: new google.maps.LatLng ( points_data.lat[numGPSPoints - 1], points_data.lon[numGPSPoints - 1] ),
         animation: google.maps.Animation.DROP,
         title: "End",
-        icon: "http://motoviz.funkware.com/images/parking.png",
+        icon: "http://evvisualizer.funkware.com/images/parking.png",
     });
     var pointMarker = new google.maps.Marker( {
         map: map,

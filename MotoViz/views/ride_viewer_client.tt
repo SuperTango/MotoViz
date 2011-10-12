@@ -434,14 +434,14 @@ function processData() {
         position: new google.maps.LatLng ( points_data.lat[0], points_data.lon[0] ),
         animation: google.maps.Animation.DROP,
         title: "Start",
-        icon: "http://motoviz.funkware.com/images/motorcycle.png",
+        icon: "http://EVVisualizer.funkware.com/images/motorcycle.png",
 
     });
     var endMarker = new google.maps.Marker ( {
         position: new google.maps.LatLng ( points_data.lat[numGPSPoints - 1], points_data.lon[numGPSPoints - 1] ),
         animation: google.maps.Animation.DROP,
         title: "End",
-        icon: "http://motoviz.funkware.com/images/parking.png",
+        icon: "http://EVVisualizer.funkware.com/images/parking.png",
     });
     pointMarker = new google.maps.Marker( {
         map: map,
@@ -551,10 +551,6 @@ function processData() {
 
 $(document).ready(function() {
     $.when ( 
-        /*$.getJSON('<% ui_url %>/newpoints/<% user_id %>/<% ride_id %>/motoviz_output.out.meta', function(data) {
-            ride_info = data;
-            //alert ( ride_info.miles_per_kwh );
-        }),*/
         $.getJSON('<% ui_url%>/v1/points_client/<% user_id %>/<% ride_id %>', function(data) {
             points_data = data;
         }))
