@@ -122,7 +122,19 @@ sub generateOutputFile {
             $ride_data->{'wh_per_mile'} = $ride_data->{'wh_total'} / $ride_data->{'distance_gps_total'};
             $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
             debug ( pp ( $latLonArray ) );
-            $ride_data->{'map_polyline'} = Algorithm::GooglePolylineEncoding::encode_polyline(@{$latLonArray});
+
+            my $limitPoints = 100;
+            my $mod = int ( scalar ( @{$latLonArray} ) / $limitPoints );
+            my $lastInt = -1;
+            my @latLonTrimmed;
+            for ( my $i = 0; $i < scalar ( @{$latLonArray} ); $i++ ) {
+                my $tmp = int ( $i / $mod );
+                if ( $tmp != $lastInt ) {
+                    push ( @latLonTrimmed, $latLonArray->[$i] );
+                    $lastInt = $tmp;
+                }
+            }
+            $ride_data->{'map_polyline'} = Algorithm::GooglePolylineEncoding::encode_polyline(@latLonTrimmed);
 
             debug ( 'ride_data: ' . pp ( $ride_data ) );
 
