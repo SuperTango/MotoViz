@@ -104,8 +104,9 @@ $(document).ready(function() {
             { "mDataProp": "title",
               "fnRender": 
                 function ( oObj ) {
+                    console.log ( oObj );
                     oObj.aData.title2 = oObj.aData.title;
-                    oObj.aData.viewUrl = '/viewer_client/' + oObj.aData.ride_id;
+                    oObj.aData.viewUrl = '/viewer_client/' + oObj.aData.user_id + '/' + oObj.aData.ride_id;
                     return '<a href="' + oObj.aData.viewUrl + '">' + oObj.aData.title + '</a>';
                 }
             },

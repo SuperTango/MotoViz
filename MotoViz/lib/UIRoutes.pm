@@ -321,8 +321,10 @@ sub get_ride_infos {
     if ( $response->is_success ) {
         my $ride_infos = from_json ( $response->decoded_content );
         my @sorted_ride_infos = sort { $a->{'time_start'} <=> $b->{'time_start'} } ( @{$ride_infos} );
-        #debug ( pp ( \@sorted_ride_infos ) );
+        debug ( pp ( \@sorted_ride_infos ) );
         return { code => 1, response_code => 200, data => \@sorted_ride_infos };
+    } elsif ( $response->code == 404 ) {
+        return { code => 1, response_code => 200, data => [] };
     } else {
         return { code => 0, response_code => $response->code() };
     }
@@ -467,30 +469,34 @@ get '/viewer_server/:ride_id' => sub {
     }
 };
 
-get '/viewer_client/:ride_id' => sub {
+get '/viewer_client/:user_id/:ride_id' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         return $login_page;
     }
-    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . params->{'user_id'} . '/' . params->{'ride_id'};
     debug ( "URL: " . $url );
     my $ua = LWP::UserAgent->new;
     my $response = $ua->get ( $url );
     debug ( "response status: " . $response->status_line );
     if ( $response->is_success ) {
         my $ride_info = from_json ( $response->decoded_content );
-        debug ( pp ( $ride_info ) );
-        motoviz_template 'ride_viewer_client.tt', {
-            user_id => session('user')->{'user_id'},
-            ride_id => params->{'ride_id'},
-            title => $ride_info->{'title'},
-        };
-
-
+        if ( ( params->{'user_id'} eq session('user')->{'user_id'} ) || ( $ride_info->{'public'} ) ) {
+            debug ( pp ( $ride_info ) );
+            motoviz_template 'ride_viewer_client.tt', {
+                user_id => params->{'user_id'},
+                ride_id => params->{'ride_id'},
+                title => $ride_info->{'title'},
+            };
+        } else {
+            return "not allowed or ride does not exist";
+        }
     } else {
         if ( $response->code() == 404 ) {
             debug ( "no rides for this user." );
+            return send_error ("not found", 404 );
         } else {
             debug ( "internal error" );
+            return send_error ("internal error", 500 );
         }
     }
 };
