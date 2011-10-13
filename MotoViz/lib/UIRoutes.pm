@@ -15,6 +15,9 @@ my $acceptable_emails = {
     'kginaven@gmail.com' => 1,
     'elec.bike@gmail.com' => 1,
     'altitude@funkware.com' => 1,
+    'tango@funkware.com' => 1,
+    'tango1@funkware.com' => 1,
+    'tango2@funkware.com' => 1,
 };
 
 before sub {
@@ -135,6 +138,7 @@ any ['get', 'post'] => '/register' => sub {
 
         $user->{'password_plaintext'} = $user->{'password1'};
         $user->{'user_id'} = 'uid_' . new Data::UUID->create_str();
+        $user->{'member_since'} = time + 0;
         delete $user->{'password1'};
         delete $user->{'password2'};
         $ret = $userStore->updateUser ( $user );
