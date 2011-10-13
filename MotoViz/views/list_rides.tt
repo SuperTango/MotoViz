@@ -96,7 +96,7 @@ function editRide ( rowId ) {
 $(document).ready(function() {
     oTable = $('#rides_datatable').dataTable ( {
         "bJQueryUI" : true,
-        "aaSorting" : [ [ 0, 'asc' ] ],
+        "aaSorting" : [ [ 2, 'asc' ] ],
         "sAjaxSource": '<% rides_url %>',
         "iDisplayLength": 50,
         "bLengthChange" : false,
