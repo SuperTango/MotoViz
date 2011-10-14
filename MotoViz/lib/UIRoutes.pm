@@ -472,9 +472,6 @@ get '/viewer_server/:ride_id' => sub {
 };
 
 get '/viewer_client/:user_id/:ride_id' => sub {
-    if ( my $login_page = ensure_logged_in() ) {
-        return $login_page;
-    }
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . params->{'user_id'} . '/' . params->{'ride_id'};
     debug ( "URL: " . $url );
     my $ua = LWP::UserAgent->new;
@@ -482,16 +479,20 @@ get '/viewer_client/:user_id/:ride_id' => sub {
     debug ( "response status: " . $response->status_line );
     if ( $response->is_success ) {
         my $ride_info = from_json ( $response->decoded_content );
-        if ( ( params->{'user_id'} eq session('user')->{'user_id'} ) || ( $ride_info->{'public'} ) ) {
-            debug ( pp ( $ride_info ) );
-            motoviz_template 'ride_viewer_client.tt', {
-                user_id => params->{'user_id'},
-                ride_id => params->{'ride_id'},
-                title => $ride_info->{'title'},
-            };
-        } else {
-            return "not allowed or ride does not exist";
+        if ( ! $ride_info->{'public'} ) {
+            if ( my $login_page = ensure_logged_in() ) {
+                return $login_page;
+            }
+            if ( params->{'user_id'} ne session('user')->{'user_id'} ) {
+                return "not authorized";
+            }
         }
+        debug ( pp ( $ride_info ) );
+        motoviz_template 'ride_viewer_client.tt', {
+            user_id => params->{'user_id'},
+            ride_id => params->{'ride_id'},
+            title => $ride_info->{'title'},
+        };
     } else {
         if ( $response->code() == 404 ) {
             debug ( "no rides for this user." );
