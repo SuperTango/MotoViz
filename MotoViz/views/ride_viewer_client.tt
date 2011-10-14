@@ -320,7 +320,7 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
     ride_info2.wh_total = ride_info2.wh_used - ride_info2.wh_regen;
     ride_info2.whPerMile = ride_info2.wh_total / ride_info2.distance_gps_total;
     ride_info2.milesPerKWh = ride_info2.distance_gps_total / ride_info2.wh_total * 1000;
-    ride_info2.speed_gps_avg = speed_gps_total / points_data.time.length;
+    ride_info2.speed_gps_avg = speed_gps_total / ( end - start );
 
     document.getElementById ( 'table_time_value' ).firstChild.data = ride_info2.date_start;
     document.getElementById ( 'table_duration_value' ).firstChild.data = ride_info2.time_duration;
