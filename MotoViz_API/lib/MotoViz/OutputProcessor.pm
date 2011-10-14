@@ -27,7 +27,7 @@ sub init {
     $self->{'user_id'} = $user_id;
     $self->{'ride_id'} = $ride_id;
     $self->{'title'} = $title;
-    $self->{'public'} = $public;
+    $self->{'public'} = ( $public ) ? 1 : 0;
     $self->{'input_processor'} = $input_processor;
 
     return { code => 1, message => 'success' };

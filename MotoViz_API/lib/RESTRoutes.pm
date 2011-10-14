@@ -133,6 +133,7 @@ put '/v1/ride/:user_id/:ride_id' => sub {
     if ( $new_title ) {
         $ride_info->{'title'} = $new_title;
     }
+    $ride_info->{'public'} = ( $ride_data_new->{'public'} ) ? 1 : 0;
     
     debug ( pp ( $ride_info ) );
     my $ret = MotoViz::RideInfo::updateRideInfo ( params->{'user_id'}, params->{'ride_id'}, $ride_info );
@@ -150,7 +151,7 @@ post '/v1/ride/:user_id' => sub {
     my $user_id = params->{'user_id'};
     my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
     my $title = params->{'title'};
-    my $public = params->{'public'} || 0;
+    my $public = ( params->{'public'} ) ? 1 : 0;
 
     if ( ! params->{'data_source'} ) {
         status 400;

@@ -93,6 +93,42 @@ function editRide ( rowId ) {
     $( "#dialog-edit_ride" ).dialog('open');
 }
 
+function updatePublic ( checkbox, rowId ) {
+    var d2 = oTable.fnGetData ( rowId );
+    console.log ( rowId + ": updatePublic.  Title: " + d2.title2  );
+    console.log ( checkbox.checked );
+                $.ajax ( {
+                    type: "GET",
+                    url: "<% ui_url %>/v1/update_ride/" + d2.ride_id,
+                    data: { "new_title" : d2.title2, "new_public" : ( ( checkbox.checked ) ? 1 : 0 ) },
+                    success: function() {
+                        //console.log ( "Success, deleting row id: " + rowId );
+                        $("#dialog-update_success").dialog ( {
+                            modal: true,
+                            buttons: {
+                                Ok: function() {
+                                    $( this ).dialog( "close" );
+                                }
+                            },
+                        } );
+                        return true;
+                    },
+                    error: function() {
+                        //console.log ( "Error, not deleting row id: " + rowId );
+                        $(this).dialog("close");
+                        $("#dialog-update_fail").dialog ( {
+                            modal: true,
+                            buttons: {
+                                Ok: function() {
+                                    $( this ).dialog( "close" );
+                                }
+                            },
+                        } );
+                        return false;
+                    },
+                } )
+}
+
 $(document).ready(function() {
     oTable = $('#rides_datatable').dataTable ( {
         "bJQueryUI" : true,
@@ -177,6 +213,19 @@ $(document).ready(function() {
                            '<a href="#" onClick="editRide( oTable.fnGetPosition ( this.parentNode.parentNode ) ); return false;"><span class="ui-icon ui-icon-pencil"></span></a>';
                 } 
             },
+            {
+                "bSortable": false,
+                "fnRender": 
+                function ( oObj ) {
+                    console.log ( oObj.aData.public );
+                    var str = '<input type="checkbox" ';
+                    if ( oObj.aData.public == 1 ) {
+                        str += 'checked ';
+                    }
+                    str += 'onClick="updatePublic ( this, oTable.fnGetPosition ( this.parentNode.parentNode) ); return true;">';
+                    return str;
+                }
+            },
         ],
     } );
 
@@ -218,7 +267,8 @@ $(document).ready(function() {
                         <th width="7%">Energy Used (Wh)</th>
                         <th width="7%">Efficiency (Wh/mi)</th>
                         <th width="7%">Efficiency (mi/kWh)</th>
-                        <th width="10%">Action<th>
+                        <th width="2%">Action</th>
+                        <th width="2%">Public?</th>
                 </tr>
         </thead>
         <tbody>
@@ -240,6 +290,12 @@ $(document).ready(function() {
     <p>
         <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>
         The server returned an error when trying to update the ride. Please try again later
+    </p>
+</div>
+<div id="dialog-update_success" title="Update Succeeded" style="display: none">
+    <p>
+        <span class="ui-icon ui-icon-comment" style="float:left; margin:0 7px 50px 0;"></span>
+        Your change has successfully been saved.
     </p>
 </div>
 <div id="dialog-edit_ride" title="Edit Ride" style="display: none">

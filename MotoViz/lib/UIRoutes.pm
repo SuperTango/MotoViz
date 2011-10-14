@@ -401,10 +401,12 @@ any [ 'get', 'post' ] => '/v1/update_ride/:ride_id' => sub {
         return "Access Denied!";
     }
     my $new_title = params->{'new_title'};
+    my $new_public = params->{'new_public'} ? 1 : 0;
+    debug ( pp ( params ) );
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
     my $request = HTTP::Request->new ( 'PUT', $url );
     $request->header ( "Content-Type" => "application/json" );
-    $request->content ( to_json ( { "title" => $new_title } ) );
+    $request->content ( to_json ( { "title" => $new_title, public => $new_public } ) );
         # TODO: Should really do more validation here.
     my $ua = LWP::UserAgent->new;
     my $response = $ua->request ( $request );
