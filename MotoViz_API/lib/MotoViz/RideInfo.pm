@@ -14,8 +14,10 @@ sub getRideInfos {
     foreach my $ride_id ( sort ( readdir ( $dirFH ) ) ) {
         next if ( $ride_id !~ /^rid_/ );
         my $ride_info = getRideInfo ( $user_id, $ride_id );
-        $ride_info->{'ride_id'} = $ride_id;
-        push ( @{$ride_infos}, $ride_info );
+        if ( $ride_info ) {
+            $ride_info->{'ride_id'} = $ride_id;
+            push ( @{$ride_infos}, $ride_info );
+        }
     }
     return $ride_infos;
 }
