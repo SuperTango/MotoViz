@@ -141,6 +141,7 @@ sub generateOutputFile {
                 #
                 # needed for file datastore
                 #
+            $ride_data->{'input_data_type'} = $self->{'input_processor'}->getInputType();
             print $output_meta_fh to_json ( $ride_data, { pretty => 1, canonical => 1 } );
             return { code => 1, message => 'done!' };
         }

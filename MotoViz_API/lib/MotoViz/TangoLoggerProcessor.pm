@@ -58,7 +58,7 @@ sub getInputInfo {
 
 sub getInputType {
     my $self = shift;
-    return "TangoLoggerV1";
+    return $self->{'id'};
 }
 
 sub getNextRecord {
@@ -73,7 +73,9 @@ sub getNextRecord {
     my $tango_line;
     while ( $tango_line = <$fh> ) {
         if ( $tango_line =~ /LOGFMT (\d+)/ ) {
-            $self->{'header'} = $headers->{'v' . $1};
+            my $rev = $1;
+            $self->{'id'} = 'TangoLogger_V' . $rev;
+            $self->{'header'} = $headers->{'v' . $rev};
             next;
         }
         my $hash = {};

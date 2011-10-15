@@ -146,6 +146,30 @@ put '/v1/ride/:user_id/:ride_id' => sub {
     }
 };
 
+get '/v1/reset_rides' => sub {
+    my $dh;
+    my $raw_log_dir = setting ( 'raw_log_dir' );
+    opendir ( $dh, setting ( 'raw_log_dir' ) ) || do {
+        error ( 'Failed opening raw_log_dir: "' . $raw_log_dir . '". Error: ' . $! );
+        return send_error ( 'Internal Error', 500 );
+    };
+    foreach my $user_id ( sort ( readdir ( $dh ) ) ) {
+        next if ( $user_id !~ /^uid_[\w\-]/ );
+        debug ( $user_id );
+        my $ride_infos = MotoViz::RideInfo::getRideInfos ( $user_id );
+        foreach my $ride_info ( @{$ride_infos} ) {
+            if ( $ride_info && $ride_info->{'input_data_type'} ) {
+                debug ( pp ( $ride_info ) );
+                if ( $ride_info->{'input_data_type'} eq 'CycleAnalyst' ) {
+                    return process_ride ( $ride_info->{'user_id'}, $ride_info->{'ride_id'}, $ride_info->{'title'}, $ride_info->{'public'}, $ride_info->{'input_data_type'}, [ $ride_info->{'input_data_source'}->{'ca_log_file'}, $ride_info->{'input_data_source'}->{'ca_gps_file'} ] );
+                } elsif ( $ride_info->{'input_data_type'} =~ /^TangoLogger/ ) {
+                    return process_ride ( $ride_info->{'user_id'}, $ride_info->{'ride_id'}, $ride_info->{'title'}, $ride_info->{'public'}, $ride_info->{'input_data_type'}, [ $ride_info->{'input_data_source'}->{'tango_file'} ] );
+                } 
+            }
+        }
+    }
+    return "ok";
+};
 
 post '/v1/ride/:user_id' => sub {
     my $user_id = params->{'user_id'};
@@ -156,27 +180,46 @@ post '/v1/ride/:user_id' => sub {
     if ( ! params->{'data_source'} ) {
         status 400;
         return 'no data_source type defined';
+    } elsif ( params->{'data_source'} eq 'CycleAnalyst' ) {
+        return process_ride ( $user_id, $ride_id, $title, $public, params->{'data_source'}, [ params->{'ca_log_file'}, params->{'ca_gps_file'} ] );
+    } elsif ( params->{'data_source'} =~ /^TangoLogger/ ) {
+        return process_ride ( $user_id, $ride_id, $title, $public, params->{'data_source'}, [ params->{'tango_file'}  ]);
+    } else {
+        status 400;
+        warning ( 'data_source type: ' . params->{'data_source'} . ' is invalid.' );
+        return 'Bad data_source type';
     }
+};
+
+sub process_ride {
+    debug ( Carp::longmess ( pp ( \@_ ) ) );
+    my $user_id = shift;
+    my $ride_id = shift;
+    my $title = shift;
+    my $public = shift;
+    my $data_source = shift;
+    my $log_files = shift;
+
     my $input_processor;
     my $ret;
-    if ( params->{'data_source'} eq 'CycleAnalyst' ) {
+    if ( $data_source eq 'CycleAnalyst' ) {
         debug ( "Got CyclAnalyst type" );
         $input_processor = new MotoViz::CAFileProcessor();
-        $ret = $input_processor->init ( $ride_id, params->{'ca_log_file'}, params->{'ca_gps_file'} );
+        $ret = $input_processor->init ( $ride_id, $log_files->[0], $log_files->[1] );
         debug ( pp ( $input_processor ) );
-    } elsif ( params->{'data_source'} eq 'TangoLogger' ) {
+    } elsif ( $data_source =~ /^TangoLogger/ ) {
         debug ( "Got TangoLogger type" );
         $input_processor = new MotoViz::TangoLoggerProcessor();
-        $ret = $input_processor->init ( $ride_id, params->{'tango_file'} );
+        $ret = $input_processor->init ( $ride_id, , $log_files->[0] );
         debug ( pp ( $input_processor ) );
     } else {
-        die "bad data souce: " . params->{'data_source'};
+        die "bad data souce: " . $data_source;
     }
     if ( $ret->{'code'} <= 0 ) {
         status 400;
         return "Problem uploading file: " . pp ( $ret );
     }
-    $ret = process_files ( $user_id, $ride_id, $input_processor, $title, $public );
+    $ret = process_input_files ( $user_id, $ride_id, $input_processor, $title, $public );
     debug ( "fileProcessor returns: " . pp ( $ret ) );
     if ( $ret->{'code'} > 0 ) {
         status 201;
@@ -191,11 +234,11 @@ post '/v1/ride/:user_id' => sub {
 
 # get '/v1/reprocess/:user_id/:ride_id' => sub {
 #     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
-#     my $ret = process_files ( $user_id, $ride_id, $title, $public );
+#     my $ret = process_input_files ( $user_id, $ride_id, $title, $public );
 #     return_json $ret, { pretty => 1 };
 # };
 
-sub process_files {
+sub process_input_files {
     my $user_id = shift;
     my $ride_id = shift;
     my $input_processor = shift;
