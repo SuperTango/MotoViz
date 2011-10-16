@@ -153,6 +153,7 @@ get '/v1/reset_rides' => sub {
         error ( 'Failed opening raw_log_dir: "' . $raw_log_dir . '". Error: ' . $! );
         return send_error ( 'Internal Error', 500 );
     };
+    my $retVals = {};
     foreach my $user_id ( sort ( readdir ( $dh ) ) ) {
         next if ( $user_id !~ /^uid_[\w\-]/ );
         debug ( $user_id );
@@ -166,14 +167,16 @@ get '/v1/reset_rides' => sub {
                 }
                 my $ret;
                 if ( $ride_info->{'input_data_type'} eq 'CycleAnalyst' ) {
-                    return process_ride ( $ride_info->{'user_id'}, $ride_info->{'ride_id'}, $ride_info->{'title'}, $ride_info->{'public'}, $ride_info->{'input_data_type'}, [ $ride_info->{'input_data_source'}->{'ca_log_file'}, $ride_info->{'input_data_source'}->{'ca_gps_file'} ] );
+                    $ret = process_ride ( $ride_info->{'user_id'}, $ride_info->{'ride_id'}, $ride_info->{'title'}, $ride_info->{'visibility'}, $ride_info->{'input_data_type'}, [ $ride_info->{'input_data_source'}->{'ca_log_file'}, $ride_info->{'input_data_source'}->{'ca_gps_file'} ] );
                 } elsif ( $ride_info->{'input_data_type'} =~ /^TangoLogger/ ) {
-                    return process_ride ( $ride_info->{'user_id'}, $ride_info->{'ride_id'}, $ride_info->{'title'}, $ride_info->{'public'}, $ride_info->{'input_data_type'}, [ $ride_info->{'input_data_source'}->{'tango_file'} ] );
+                    $ret = process_ride ( $ride_info->{'user_id'}, $ride_info->{'ride_id'}, $ride_info->{'title'}, $ride_info->{'visibility'}, $ride_info->{'input_data_type'}, [ $ride_info->{'input_data_source'}->{'tango_file'} ] );
                 } 
+                $retVals->{$ride_info->{'user_id'} . '/' . $ride_info->{'ride_id'}} = $ret;
             }
         }
     }
-    return "ok";
+    status 200;
+    return_json ( $retVals, { pretty => 1, canonical => 1 } );
 };
 
 post '/v1/ride/:user_id' => sub {
@@ -187,61 +190,72 @@ post '/v1/ride/:user_id' => sub {
     if ( ! params->{'data_source'} ) {
         status 400;
         return 'no data_source type defined';
-    } elsif ( params->{'data_source'} eq 'CycleAnalyst' ) {
-        return process_ride ( $user_id, $ride_id, $title, $public, params->{'data_source'}, [ params->{'ca_log_file'}, params->{'ca_gps_file'} ] );
-    } elsif ( params->{'data_source'} =~ /^TangoLogger/ ) {
-        return process_ride ( $user_id, $ride_id, $title, $public, params->{'data_source'}, [ params->{'tango_file'}  ]);
-    } else {
+    } elsif ( ( params->{'data_source'} ne 'CycleAnalyst' ) && ( params->{'data_source'} !~ /^TangoLogger/ ) ) {
         status 400;
         warning ( 'data_source type: ' . params->{'data_source'} . ' is invalid.' );
         return 'Bad data_source type';
     }
+
+    if ( params->{'data_source'} eq 'CycleAnalyst' ) {
+        $ret = process_ride ( $user_id, $ride_id, $title, $visibility, params->{'data_source'}, [ params->{'ca_log_file'}, params->{'ca_gps_file'} ] );
+    } elsif ( params->{'data_source'} =~ /^TangoLogger/ ) {
+        $ret = return process_ride ( $user_id, $ride_id, $title, $visibility, params->{'data_source'}, [ params->{'tango_file'}  ]);
+    }
+    if ( $ret->{'code'} > 0 ) {
+        status 201;
+        header 'Location' => setting ( 'api_url' ) . '/v1/ride/' . $user_id . '/' . $ride_id;
+    } elsif ( $ret->{'code'} == 0 ) {
+        status 400;
+        return 'bad request, data failure perhaps';
+    } else {
+        status 500;
+        return 'internal error';
+    }
 };
 
 sub process_ride {
-    debug ( Carp::longmess ( pp ( \@_ ) ) );
     my $user_id = shift;
     my $ride_id = shift;
     my $title = shift;
-    my $public = shift;
+    my $visibility = shift;
     my $data_source = shift;
     my $log_files = shift;
+    debug ( 'ride_id: ' . $ride_id );
 
     my $input_processor;
     my $ret;
     if ( $data_source eq 'CycleAnalyst' ) {
-        debug ( "Got CyclAnalyst type" );
+        debug ( "Got CycleAnalyst type" );
         $input_processor = new MotoViz::CAFileProcessor();
         $ret = $input_processor->init ( $ride_id, $log_files->[0], $log_files->[1] );
-        debug ( pp ( $input_processor ) );
     } elsif ( $data_source =~ /^TangoLogger/ ) {
         debug ( "Got TangoLogger type" );
         $input_processor = new MotoViz::TangoLoggerProcessor();
         $ret = $input_processor->init ( $ride_id, , $log_files->[0] );
-        debug ( pp ( $input_processor ) );
     } else {
-        die "bad data souce: " . $data_source;
+        my $ret = { code => -2, message => "bad data souce: " . $data_source };
+        warn ( pp ( $ret ) );
+        return $ret;
     }
     if ( $ret->{'code'} <= 0 ) {
-        status 400;
-        return "Problem uploading file: " . pp ( $ret );
+        my $ret = { code => 0, message => 'Problem uploading file: ' . pp ( $ret ) };
+        warn ( pp ( $ret ) );
+        return $ret;
     }
-    $ret = process_input_files ( $user_id, $ride_id, $input_processor, $title, $public );
+    $ret = process_input_files ( $user_id, $ride_id, $input_processor, $title, $visibility );
     debug ( "fileProcessor returns: " . pp ( $ret ) );
     if ( $ret->{'code'} > 0 ) {
-        status 201;
-        header 'Location' => setting ( 'api_url' ) . '/v1/ride/' . $user_id . '/' . $ride_id;
-        return;
+        return { code => 1, message => 'success' };
     } else {
-        status 500;
-        warning 'Failed processing request.  processCAFiles returned: ' . pp ( $ret );
-        return;
+        my $ret = { code => -1, message => 'Failed processing request.  Process files returned: ' . pp ( $ret ) };
+        error pp ( $ret );
+        return $ret;
     }
 };
 
 # get '/v1/reprocess/:user_id/:ride_id' => sub {
 #     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
-#     my $ret = process_input_files ( $user_id, $ride_id, $title, $public );
+#     my $ret = process_input_files ( $user_id, $ride_id, $title, $visibility );
 #     return_json $ret, { pretty => 1 };
 # };
 
@@ -250,10 +264,10 @@ sub process_input_files {
     my $ride_id = shift;
     my $input_processor = shift;
     my $title = shift;
-    my $public = shift;
+    my $visibility = shift;
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
     my $output_processor = new MotoViz::OutputProcessor();
-    $output_processor->init ( $user_id, $ride_id, $title, $public, $input_processor );
+    $output_processor->init ( $user_id, $ride_id, $title, $visibility, $input_processor );
     return $output_processor->generateOutputFile ( $ride_path . '/motoviz_output.out' );
 };
 

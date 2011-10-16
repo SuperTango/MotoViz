@@ -25,6 +25,7 @@ sub init {
     my $self = shift;
     my $ride_id = shift;
     $self->{'tango_file'} = shift;
+    $self->{'id'} = 'TangoLogger_V1';
 
     $self->{'header'} = $headers->{'v1'};
     my $ret = $self->verifyTangoFile ( $self->{'tango_file'} );
