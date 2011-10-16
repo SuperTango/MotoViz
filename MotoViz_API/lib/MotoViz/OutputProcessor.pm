@@ -121,7 +121,6 @@ sub generateOutputFile {
             $ride_data->{'speed_avg'} = $speed_total / $ride_data->{'points_count'};
             $ride_data->{'wh_per_mile'} = $ride_data->{'wh_total'} / $ride_data->{'distance_gps_total'};
             $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
-            debug ( pp ( $latLonArray ) );
 
             my $limitPoints = 100;
             my $mod = int ( scalar ( @{$latLonArray} ) / $limitPoints );
@@ -135,8 +134,6 @@ sub generateOutputFile {
                 }
             }
             $ride_data->{'map_polyline'} = Algorithm::GooglePolylineEncoding::encode_polyline(@latLonTrimmed);
-
-            debug ( 'ride_data: ' . pp ( $ride_data ) );
 
                 #
                 # needed for file datastore
