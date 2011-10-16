@@ -93,14 +93,14 @@ function editRide ( rowId ) {
     $( "#dialog-edit_ride" ).dialog('open');
 }
 
-function updatePublic ( checkbox, rowId ) {
+function updateVisibility ( checkbox, rowId ) {
     var d2 = oTable.fnGetData ( rowId );
-    console.log ( rowId + ": updatePublic.  Title: " + d2.title2  );
+    console.log ( rowId + ": updateVisibility.  Title: " + d2.title2  );
     console.log ( checkbox.checked );
                 $.ajax ( {
                     type: "GET",
                     url: "<% ui_url %>/v1/update_ride/" + d2.ride_id,
-                    data: { "new_title" : d2.title2, "new_public" : ( ( checkbox.checked ) ? 1 : 0 ) },
+                    data: { "new_title" : d2.title2, "new_visibility" : ( ( checkbox.checked ) ? 'public' : 'private' ) },
                     success: function() {
                         //console.log ( "Success, deleting row id: " + rowId );
                         $("#dialog-update_success").dialog ( {
@@ -217,12 +217,12 @@ $(document).ready(function() {
                 "bSortable": false,
                 "fnRender": 
                 function ( oObj ) {
-                    console.log ( oObj.aData.public );
+                    console.log ( oObj.aData.visibility );
                     var str = '<input type="checkbox" ';
-                    if ( oObj.aData.public == 1 ) {
+                    if ( oObj.aData.visibility == 'public' ) {
                         str += 'checked ';
                     }
-                    str += 'onClick="updatePublic ( this, oTable.fnGetPosition ( this.parentNode.parentNode) ); return true;">';
+                    str += 'onClick="updateVisibility ( this, oTable.fnGetPosition ( this.parentNode.parentNode) ); return true;">';
                     return str;
                 }
             },
@@ -268,7 +268,7 @@ $(document).ready(function() {
                         <th width="7%">Efficiency (Wh/mi)</th>
                         <th width="7%">Efficiency (mi/kWh)</th>
                         <th width="2%">Action</th>
-                        <th width="2%">Public?</th>
+                        <th width="2%">Visibility?</th>
                 </tr>
         </thead>
         <tbody>

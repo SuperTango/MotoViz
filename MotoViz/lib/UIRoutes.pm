@@ -246,7 +246,7 @@ post '/upload' => sub {
     my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'user_id'} . '/' . $ride_id;
     my $title = params->{'title'};
-    my $public = params->{'public'} || 0;
+    my $visibility = params->{'visibility'} || 'private';
     my $ca_log_file = request->upload ( 'ca_log_file' );
     my $ca_gps_file = request->upload ( 'ca_gps_file' );
     my $tango_file = request->upload ( 'tango_file' );
@@ -258,11 +258,11 @@ post '/upload' => sub {
     debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
     debug ( 'got tango_file: ' . pp ( $tango_file ) );
     debug ( 'title' . $title );
-    debug ( 'public' . $public );
+    debug ( 'visibility' . $visibility );
     my $rest_params = {
         ride_id => $ride_id,
         title => $title,
-        public => $public,
+        visibility => $visibility,
     };
     if ( $ca_log_file ) {
         debug ( 'move_upload ( ' . $ca_log_file . ', ' . $ride_path );
@@ -401,12 +401,12 @@ any [ 'get', 'post' ] => '/v1/update_ride/:ride_id' => sub {
         return "Access Denied!";
     }
     my $new_title = params->{'new_title'};
-    my $new_public = params->{'new_public'} ? 1 : 0;
+    my $new_visibility = params->{'new_visibility'} || 'private';
     debug ( pp ( params ) );
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
     my $request = HTTP::Request->new ( 'PUT', $url );
     $request->header ( "Content-Type" => "application/json" );
-    $request->content ( to_json ( { "title" => $new_title, public => $new_public } ) );
+    $request->content ( to_json ( { "title" => $new_title, visibility => $new_visibility } ) );
         # TODO: Should really do more validation here.
     my $ua = LWP::UserAgent->new;
     my $response = $ua->request ( $request );
@@ -479,7 +479,7 @@ get '/viewer_client/:user_id/:ride_id' => sub {
     debug ( "response status: " . $response->status_line );
     if ( $response->is_success ) {
         my $ride_info = from_json ( $response->decoded_content );
-        if ( ! $ride_info->{'public'} ) {
+        if ( ! $ride_info->{'visibility'} ) {
             if ( my $login_page = ensure_logged_in() ) {
                 return $login_page;
             }

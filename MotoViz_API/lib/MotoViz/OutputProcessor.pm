@@ -21,13 +21,13 @@ sub init {
     my $user_id = shift;
     my $ride_id = shift;
     my $title = shift;
-    my $public = shift;
+    my $visibility = shift;
     my $input_processor = shift;
 
     $self->{'user_id'} = $user_id;
     $self->{'ride_id'} = $ride_id;
     $self->{'title'} = $title;
-    $self->{'public'} = ( $public ) ? 1 : 0;
+    $self->{'visibility'} = ( $visibility ) || 'private';
     $self->{'input_processor'} = $input_processor;
 
     return { code => 1, message => 'success' };
@@ -74,7 +74,7 @@ sub generateOutputFile {
         input_data_type => $self->{'input_processor'}->getInputType(),
         input_data_source => $self->{'input_processor'}->getInputInfo(),
         title => $self->{'title'},
-        public => $self->{'public'},
+        visibility => $self->{'visibility'},
         output_file => $output_file,
         wh_total => 0,
     };

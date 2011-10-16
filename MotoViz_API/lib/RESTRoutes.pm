@@ -133,7 +133,7 @@ put '/v1/ride/:user_id/:ride_id' => sub {
     if ( $new_title ) {
         $ride_info->{'title'} = $new_title;
     }
-    $ride_info->{'public'} = ( $ride_data_new->{'public'} ) ? 1 : 0;
+    $ride_info->{'visibility'} = $ride_data_new->{'visibility'} || 'private';
     
     debug ( pp ( $ride_info ) );
     my $ret = MotoViz::RideInfo::updateRideInfo ( params->{'user_id'}, params->{'ride_id'}, $ride_info );
@@ -159,7 +159,12 @@ get '/v1/reset_rides' => sub {
         my $ride_infos = MotoViz::RideInfo::getRideInfos ( $user_id );
         foreach my $ride_info ( @{$ride_infos} ) {
             if ( $ride_info && $ride_info->{'input_data_type'} ) {
-                debug ( pp ( $ride_info ) );
+                if ( $ride_info->{'public'} ) {
+                    $ride_info->{'visibiity'} = 'public';
+                } elsif ( ! $ride_info->{'visibility'} ) {
+                    $ride_info->{'visibiity'} = 'private';
+                }
+                my $ret;
                 if ( $ride_info->{'input_data_type'} eq 'CycleAnalyst' ) {
                     return process_ride ( $ride_info->{'user_id'}, $ride_info->{'ride_id'}, $ride_info->{'title'}, $ride_info->{'public'}, $ride_info->{'input_data_type'}, [ $ride_info->{'input_data_source'}->{'ca_log_file'}, $ride_info->{'input_data_source'}->{'ca_gps_file'} ] );
                 } elsif ( $ride_info->{'input_data_type'} =~ /^TangoLogger/ ) {
@@ -175,7 +180,9 @@ post '/v1/ride/:user_id' => sub {
     my $user_id = params->{'user_id'};
     my $ride_id = params->{'ride_id'} || 'rid_' . new Data::UUID->create_str();
     my $title = params->{'title'};
-    my $public = ( params->{'public'} ) ? 1 : 0;
+    my $visibility = params->{'visibility'} || 'private';
+
+    my $ret;
 
     if ( ! params->{'data_source'} ) {
         status 400;
