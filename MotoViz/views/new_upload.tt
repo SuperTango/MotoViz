@@ -1,10 +1,64 @@
-
-<form action="upload" method="post" enctype='multipart/form-data' class="upload">
-    Ride Name (optional): <input type="text" name="title"><p/>
-    Public?: <input type="checkbox" name="public" value="yes"><p/>
-    CA Log File: <input type="file" name="ca_log_file"><p/>
-    CA GPS File: <input type="file" name="ca_gps_file"><p/>
-    TangoLogger File: <input type="file" name="tango_file"><p/>
+<style type="text/css">
+#upload_failed {
+    color: red;
+}
+</style>
+<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.validate.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#input_data_type").change ( function() {
+        var input_data_type = $("#input_data_type").val();
+        if ( input_data_type == "CycleAnalyst" ) {
+            $("#TangoLogger").hide();
+            $("#CycleAnalyst").show();
+        } else if ( input_data_type == "TangoLogger" ) {
+            $("#CycleAnalyst").hide();
+            $("#TangoLogger").show();
+        } else {
+            $("#CycleAnalyst").hide();
+            $("#TangoLogger").hide();
+        }
+    } );
+} );
+</script>
+<% IF errors %>
+<div id="upload_failed">
+<h2>Upload Failed.</h2>
+The following errors occurred:
+<ul>
+    <% FOREACH error IN errors %> 
+        <li><% error %></li>
+    <% END %>
+</ul>
+</div>
+<% END %>
+<form action="upload" method="post" enctype='multipart/form-data' id="upload">
+    <p><label for"title">Ride Name:</label> <input type="text" name="title" class="required"></p>
+    <p><label for="input_data_type">Data Format</label>
+        <select name="input_data_type" id="input_data_type">
+            <option value="CycleAnalyst" selected>Cycle Analyst</option>
+            <option value="TangoLogger">Tango Logger</option>
+        </select></p>
+    <div id="CycleAnalyst">
+    <p><b>Please note, when submitting a Cycle Analyst data set, both the Log and GPS files must be provided.</b></p>
+    <p>
+        <label for"ca_log_hz">Log file measurements per second:</label> <select name="ca_log_hz" id="ca_log_hz" class="required">
+            <option></option>
+            <option></option>
+            <option>1Hz</option>
+            <option>5Hz</option>
+        </select></p>
+    <p><label for "ca_log_file">CA Log File:</label> <input type="file" name="ca_log_file" class="required"></p>
+    <p><label for "ca_gps_file">CA GPS File:</label> <input type="file" name="ca_gps_file" class="required"></p>
+    </div>
+    <div id="TangoLogger" style="display: none">
+    <p><label for="tango_file">TangoLogger File:</label> <input type="file" name="tango_file" class="required"></p>
+    </div>
+    <p><label for="visibility">Ride Visibility:</label> <select name="visibility" id="visibility_id" class="required">
+        <option value="public">Public</option>
+        <option value="unlisted">Unlisted</option>
+        <option value="private">Private</option>
+    </label></p>
     <input type=submit name=press value="OK">
 </form>
 

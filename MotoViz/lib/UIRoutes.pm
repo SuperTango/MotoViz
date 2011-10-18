@@ -247,54 +247,97 @@ post '/upload' => sub {
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . session ('user')->{'user_id'} . '/' . $ride_id;
     my $title = params->{'title'};
     my $visibility = params->{'visibility'} || 'private';
+    my $input_data_type = params->{'input_data_type'};
     my $ca_log_file = request->upload ( 'ca_log_file' );
+    my $ca_log_hz = params->{'ca_log_hz'};
     my $ca_gps_file = request->upload ( 'ca_gps_file' );
     my $tango_file = request->upload ( 'tango_file' );
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
     my $ua = LWP::UserAgent->new;
     my $ret;
-    debug ( 'ride_id: ' . $ride_id );
-    debug ( 'got ca_log_file: ' . pp ( $ca_log_file ) );
-    debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
-    debug ( 'got tango_file: ' . pp ( $tango_file ) );
-    debug ( 'title' . $title );
-    debug ( 'visibility' . $visibility );
+
+    my @errors;
+    my $error_code = 400;;
+    
+    if ( ! $title ) {
+        push ( @errors, 'Title must be provided.' );
+    }
+
     my $rest_params = {
         ride_id => $ride_id,
         title => $title,
         visibility => $visibility,
     };
-    if ( $ca_log_file ) {
-        debug ( 'move_upload ( ' . $ca_log_file . ', ' . $ride_path );
-        $ret = move_upload ( $ca_log_file, $ride_path );
-        debug ( 'ret from move_upload: ' . pp ( $ret ) );
-        if ( $ret->{'code'} <= 0 ) {
-            my $eid = log_error ( 'Upload processing failed' );
-            status ( 500 );
-            return 'An internal error occurred (' . $eid . ')';
-        } else {
-            $ca_log_file = $ret->{'full_file'};
-        }
 
-        $ret = move_upload ( $ca_gps_file, $ride_path );
-        if ( $ret->{'code'} <= 0 ) {
-            # TODO: Error handling here.
+    if ( ! $input_data_type ) {
+        push ( @errors, 'The "Data Format" must be provided' );
+
+    } elsif ( $input_data_type eq 'CycleAnalyst' ) {
+        if ( ( ! $ca_log_file ) || ( ! $ca_gps_file ) ) {
+            push ( @errors, 'Both the CycleAnalyst Log and CycleAnalyst GPS files must be provided.' );
         } else {
-            $ca_gps_file = $ret->{'full_file'};
+            debug ( 'move_upload ( ' . $ca_log_file . ', ' . $ride_path );
+            $ret = move_upload ( $ca_log_file, $ride_path );
+            debug ( 'ret from move_upload: ' . pp ( $ret ) );
+            if ( $ret->{'code'} <= 0 ) {
+                my $eid = log_error ( 'Upload processing failed' );
+                push ( @errors, 'An internal error occurred (' . $eid . ')' );
+                $error_code = 500;
+            } else {
+                $ca_log_file = $ret->{'full_file'};
+            }
+
+            $ret = move_upload ( $ca_gps_file, $ride_path );
+            if ( $ret->{'code'} <= 0 ) {
+                my $eid = log_error ( 'Upload processing failed' );
+                push ( @errors, 'An internal error occurred (' . $eid . ')' );
+                $error_code = 500;
+            } else {
+                $ca_gps_file = $ret->{'full_file'};
+            }
+
+            if ( ! $ca_log_hz ) {
+                push ( @errors, 'The CA Log File measurements per second parameter must be provided' );
+            } elsif ( $ca_log_hz !~ /^\s*[15]Hz\s*$/ ) {
+                push ( @errors, 'The CA Log File measurements per second parameter must be either "1Hz" or "5Hz"' );
+            }
+            $rest_params->{'input_data_type'} = "CycleAnalyst";
+            $rest_params->{'ca_log_file'} = $ca_log_file;
+            $rest_params->{'ca_gps_file'} = $ca_gps_file;
+            $rest_params->{'ca_log_hz'} = $ca_log_hz;
         }
-        $rest_params->{'data_source'} = "CycleAnalyst";
-        $rest_params->{'ca_log_file'} = $ca_log_file;
-        $rest_params->{'ca_gps_file'} = $ca_gps_file;
+    } elsif ( $input_data_type eq 'TangoLogger' ) {
+        if ( ! $tango_file ) {
+            push ( @errors, 'The Tango Log file must be provided.' );
+        } else {
+            $ret = move_upload ( $tango_file, $ride_path );
+            if ( $ret->{'code'} <= 0 ) {
+                my $eid = log_error ( 'Upload processing failed' );
+                push ( @errors, 'An internal error occurred (' . $eid . ')' );
+                $error_code = 500;
+            } else {
+                $tango_file = $ret->{'full_file'};
+            }
+            $rest_params->{'input_data_type'} = "TangoLogger";
+            $rest_params->{'tango_file'} = $tango_file;
+        }
     } else {
-        $ret = move_upload ( $tango_file, $ride_path );
-        if ( $ret->{'code'} <= 0 ) {
-            # TODO: Error handling here.
-        } else {
-            $tango_file = $ret->{'full_file'};
-        }
-        $rest_params->{'data_source'} = "TangoLogger";
-        $rest_params->{'tango_file'} = $tango_file;
+        warning ( "input data type from user is: " . $input_data_type );
+        push ( @errors, 'The "Data Format" provided was invalid' );
+        return "Bad request, input data type is bad";
     }
+    if ( @errors ) {
+        status ( $error_code );
+        return motoviz_template 'new_upload.tt', { errors => \@errors };
+    }
+
+    debug ( 'ride_id: ' . $ride_id );
+    debug ( 'input_data_type: ' . $input_data_type );
+    debug ( 'got ca_log_file: ' . pp ( $ca_log_file ) );
+    debug ( 'got ca_gps_file: ' . pp ( $ca_gps_file ) );
+    debug ( 'got tango_file: ' . pp ( $tango_file ) );
+    debug ( 'title' . $title );
+    debug ( 'visibility' . $visibility );
 
     my $response = $ua->post ( $url, $rest_params );
     debug ( "response from API server for URL: $url, status: " . $response->status_line );
@@ -306,8 +349,13 @@ post '/upload' => sub {
             ride_id => $ride_id,
             title => $title,
         };
+    } elsif ( $response->code == 400 )  {
+        push ( @errors, $response->content );
+        return motoviz_template 'new_upload.tt', { errors => \@errors };
     } else {
-        return "Got HTML Response: " . $response->code . "<pre>" . encode_entities ( $response->content ) . "</pre>";
+        my $eid = log_error ( 'Failed posting upload data to API server: ' . pp ( $response ) );
+        push ( @errors, 'Failed when trying to save the upload data (' . $eid . ')' );
+        return motoviz_template 'new_upload.tt', { errors => \@errors };
     }
 
 };

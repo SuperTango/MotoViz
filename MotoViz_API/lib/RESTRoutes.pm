@@ -187,26 +187,26 @@ post '/v1/ride/:user_id' => sub {
 
     my $ret;
 
-    if ( ! params->{'data_source'} ) {
+    if ( ! params->{'input_data_type'} ) {
         status 400;
-        return 'no data_source type defined';
-    } elsif ( ( params->{'data_source'} ne 'CycleAnalyst' ) && ( params->{'data_source'} !~ /^TangoLogger/ ) ) {
+        return 'no input_data_type type defined';
+    } elsif ( ( params->{'input_data_type'} ne 'CycleAnalyst' ) && ( params->{'input_data_type'} !~ /^TangoLogger/ ) ) {
         status 400;
-        warning ( 'data_source type: ' . params->{'data_source'} . ' is invalid.' );
-        return 'Bad data_source type';
+        warning ( 'input_data_type type: ' . params->{'input_data_type'} . ' is invalid.' );
+        return 'Bad input_data_type type';
     }
 
-    if ( params->{'data_source'} eq 'CycleAnalyst' ) {
-        $ret = process_ride ( $user_id, $ride_id, $title, $visibility, params->{'data_source'}, [ params->{'ca_log_file'}, params->{'ca_gps_file'} ] );
-    } elsif ( params->{'data_source'} =~ /^TangoLogger/ ) {
-        $ret = return process_ride ( $user_id, $ride_id, $title, $visibility, params->{'data_source'}, [ params->{'tango_file'}  ]);
+    if ( params->{'input_data_type'} eq 'CycleAnalyst' ) {
+        $ret = process_ride ( $user_id, $ride_id, $title, $visibility, params->{'input_data_type'}, [ params->{'ca_log_file'}, params->{'ca_gps_file'} ] );
+    } elsif ( params->{'input_data_type'} =~ /^TangoLogger/ ) {
+        $ret = process_ride ( $user_id, $ride_id, $title, $visibility, params->{'input_data_type'}, [ params->{'tango_file'}  ]);
     }
     if ( $ret->{'code'} > 0 ) {
         status 201;
         header 'Location' => setting ( 'api_url' ) . '/v1/ride/' . $user_id . '/' . $ride_id;
     } elsif ( $ret->{'code'} == 0 ) {
         status 400;
-        return 'bad request, data failure perhaps';
+        return $ret->{'message'};
     } else {
         status 500;
         return 'internal error';
@@ -218,28 +218,30 @@ sub process_ride {
     my $ride_id = shift;
     my $title = shift;
     my $visibility = shift;
-    my $data_source = shift;
+    my $input_data_type = shift;
     my $log_files = shift;
     debug ( 'ride_id: ' . $ride_id );
 
     my $input_processor;
     my $ret;
-    if ( $data_source eq 'CycleAnalyst' ) {
+    if ( $input_data_type eq 'CycleAnalyst' ) {
         debug ( "Got CycleAnalyst type" );
         $input_processor = new MotoViz::CAFileProcessor();
         $ret = $input_processor->init ( $ride_id, $log_files->[0], $log_files->[1] );
-    } elsif ( $data_source =~ /^TangoLogger/ ) {
+        warning ( pp ( $ret ) );
+    } elsif ( $input_data_type =~ /^TangoLogger/ ) {
         debug ( "Got TangoLogger type" );
         $input_processor = new MotoViz::TangoLoggerProcessor();
         $ret = $input_processor->init ( $ride_id, , $log_files->[0] );
     } else {
-        my $ret = { code => -2, message => "bad data souce: " . $data_source };
-        warn ( pp ( $ret ) );
+        my $ret = { code => -2, message => "bad data souce: " . $input_data_type };
+        warning ( pp ( $ret ) );
         return $ret;
     }
     if ( $ret->{'code'} <= 0 ) {
-        my $ret = { code => 0, message => 'Problem uploading file: ' . pp ( $ret ) };
-        warn ( pp ( $ret ) );
+            # note, message goes to user
+        my $ret = { code => 0, message => $ret->{'message'} };
+        warning ( pp ( $ret ) );
         return $ret;
     }
     $ret = process_input_files ( $user_id, $ride_id, $input_processor, $title, $visibility );
