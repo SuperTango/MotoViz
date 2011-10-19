@@ -324,7 +324,7 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
             } );
         }
     }
-    console.log ( minMax );
+    //console.log ( minMax );
     //console.log ( ride_info2 );
     ride_info2.date_start = new Date ( ride_info2.time_start * 1000 ).toLocaleString();
     ride_info2.date_end = new Date ( ride_info2.time_end * 1000 ).toLocaleString();
@@ -601,7 +601,7 @@ function processData() {
     startMarker.setMap ( map );
     endMarker.setMap ( map );
     google.maps.event.addListener(rideLine, 'click', function(event) {
-        console.log ( event.latLng );
+        //console.log ( event.latLng );
     });
 
     $(".zstripe tr:even").addClass("alt" );
