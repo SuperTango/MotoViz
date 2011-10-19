@@ -145,6 +145,9 @@ any ['get', 'post'] => '/register' => sub {
         if ( $ret->{'code'} == 0 ) {
             log_error ( 'internal validation failed when registering user: ' . pp ( $user ) );
             return motoviz_template 'register_form.tt', { user => $user, errors => [ 'validation failed' ] };
+        } elsif ( $ret->{'code'} < 0 ) {
+            my $eid = log_error ( 'internal error when registering user: ' . pp ( $user ) );
+            return motoviz_template 'register_form.tt', { user => $user, errors => [ 'internal error: ' . $eid ] };
         }
 
         session 'user' => $user;
@@ -595,7 +598,7 @@ sub move_upload {
 sub log_error {
     my $msg = shift;
     my $eid = new Data::UUID->create_str();
-    error ( 'EID:' . $eid . ': ' . $msg );
+    error ( Carp::longmess ( 'EID:' . $eid . ': ' . $msg ) );
     return $eid;
 }
 

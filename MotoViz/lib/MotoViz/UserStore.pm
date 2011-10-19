@@ -14,6 +14,11 @@ sub new {
     my $pw_file = shift;
     my $self = {};
     $self->{'pw_file'} = $pw_file;
+    if ( ! -f $pw_file ) {
+        open ( my $fh, '>', $pw_file ) || die;
+        print $fh "{}\n";
+        close ( $fh );
+    }
 
     bless $self, $class;
     return $self;
