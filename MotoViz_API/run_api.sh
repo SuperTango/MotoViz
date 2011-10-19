@@ -1,8 +1,14 @@
 #!/bin/bash -x
+PORT=5001
 if [[ ${HOSTNAME} == "vm3.funkware.com" ]] ; then
-    DANCER_ENV='development-vm3'
+    if [[ ${PWD} == "/funk/home/altitude/MotoViz-staging/MotoViz_API" ]] ; then
+        DANCER_ENV='development-vm3_staging'
+        PORT=5003
+    else
+        DANCER_ENV='development-vm3'
+    fi
 else
     DANCER_ENV='development-localhost'
 fi
-plackup -E ${DANCER_ENV} -p 5001 -a bin/app.pl -s Starman --error-log `pwd`/logs/error_log --access-log `pwd`/logs/access_log
+plackup -E ${DANCER_ENV} -p ${PORT} -a bin/app.pl -s Starman --error-log `pwd`/logs/error_log --access-log `pwd`/logs/access_log
 
