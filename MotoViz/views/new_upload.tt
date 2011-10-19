@@ -95,7 +95,7 @@ The following errors occurred:
     <div id="CycleAnalyst">
     <p><b>Please note, when submitting a Cycle Analyst data set, both the Log and GPS files must be provided.</b></p>
     <p>
-        <label for"ca_log_hz">Log file measurements per second:</label>
+        <label for"ca_log_hz">CA Log file measurement frequency:</label>
         <select name="ca_log_hz" id="ca_log_hz" class="required">
             <option></option>
             <option>1Hz</option>
