@@ -53,7 +53,7 @@ function deleteRide ( rowId ) {
 
 function editRide ( rowId ) {
     var d2 = oTable.fnGetData ( rowId );
-    console.log ( rowId + ": edit.  Title: " + d2.title2 );
+    //console.log ( rowId + ": edit.  Title: " + d2.title2 );
     $("#dialog-edit_ride").dialog ( 
             "option", "buttons", {
             "Cancel": function() { 
@@ -62,7 +62,7 @@ function editRide ( rowId ) {
             "Save" : function() {
                 var bValid = true;
                 var newTitle = $("#uititle").val();
-                console.log ( newTitle );
+                //console.log ( newTitle );
                 //allFields.removeClass( "ui-state-error" );
                 $.ajax ( {
                     type: "GET",
@@ -95,8 +95,8 @@ function editRide ( rowId ) {
 
 function updateVisibility ( checkbox, rowId ) {
     var d2 = oTable.fnGetData ( rowId );
-    console.log ( rowId + ": updateVisibility.  Title: " + d2.title2  );
-    console.log ( checkbox.checked );
+    //console.log ( rowId + ": updateVisibility.  Title: " + d2.title2  );
+    //console.log ( checkbox.checked );
                 $.ajax ( {
                     type: "GET",
                     url: "<% ui_url %>/v1/update_ride/" + d2.ride_id,
@@ -140,7 +140,7 @@ $(document).ready(function() {
             { "mDataProp": "title",
               "fnRender": 
                 function ( oObj ) {
-                    console.log ( oObj );
+                    //console.log ( oObj );
                     oObj.aData.title2 = oObj.aData.title;
                     oObj.aData.viewUrl = '/viewer_client/' + oObj.aData.user_id + '/' + oObj.aData.ride_id;
                     return '<a href="' + oObj.aData.viewUrl + '">' + oObj.aData.title + '</a>';
@@ -217,7 +217,7 @@ $(document).ready(function() {
                 "bSortable": false,
                 "fnRender": 
                 function ( oObj ) {
-                    console.log ( oObj.aData.visibility );
+                    //console.log ( oObj.aData.visibility );
                     var str = '<input type="checkbox" ';
                     if ( oObj.aData.visibility == 'public' ) {
                         str += 'checked ';
