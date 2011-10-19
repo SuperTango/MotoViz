@@ -531,6 +531,9 @@ get '/viewer_client/:user_id/:ride_id' => sub {
     if ( $response->is_success ) {
         my $ride_info = from_json ( $response->decoded_content );
         if ( ! $ride_info->{'visibility'} ) {
+            $ride_info->{'visibility'} = 'private';
+        }
+        if ( $ride_info->{'visibility'} eq 'private' ) {
             if ( my $login_page = ensure_logged_in() ) {
                 return $login_page;
             }
