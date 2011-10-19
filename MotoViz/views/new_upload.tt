@@ -2,7 +2,48 @@
 #upload_failed {
     color: red;
 }
+.error {
+    color: red;
+}
+
+/* tooltip styling. by default the element to be styled is .tooltip  */
+.tooltip {
+        display:none;
+        background:transparent url(<% ui_url %>/images/jquerytools-tooltip/black_arrow.png);
+        font-size:11px;
+        height:70px;
+        width:160px;
+        padding:25px;
+        color:#fff;     
+}
+.tooltipbig {
+        display:none;
+        background:transparent url(<% ui_url %>/images/jquerytools-tooltip/black_arrow_big.png);
+        font-size:11px;
+        height:186px;
+        width:340px;
+        padding:15px;
+        color:#fff;     
+}
+.tooltip.bottom {
+        background:transparent url(<% ui_url %>/images/jquerytools-tooltip/black_arrow_bottom.png);
+        padding-top:40px;
+        height:55px;
+}
+
+.tooltip.bottom {
+        background:transparent url(<% ui_url %>/images/jquerytools-tooltip/black_arrow_bottom.png);
+}
+
 </style>
+<!-- use gif image for IE -->
+<!--[if lt IE 7]>
+<style>
+.tooltip {
+        background-image:url(<% ui_url %>/images/jquerytools-tooltip/black_arrow.gif);
+}
+</style>
+<![endif]-->
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.validate.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
@@ -18,6 +59,16 @@ $(document).ready(function() {
             $("#CycleAnalyst").hide();
             $("#TangoLogger").hide();
         }
+    } );
+    $("#upload").validate();
+    $(".infotip").tooltip({
+        effect: 'slide',
+        slideOffset: 5
+    } ).dynamic({ bottom: { direction: 'down', bounce: true } } );
+    $(".infotip_big").tooltip({
+        tipClass: 'tooltipbig',
+        effect: 'slide',
+        slideOffset: 5
     } );
 } );
 </script>
@@ -38,16 +89,20 @@ The following errors occurred:
         <select name="input_data_type" id="input_data_type">
             <option value="CycleAnalyst" selected>Cycle Analyst</option>
             <option value="TangoLogger">Tango Logger</option>
-        </select></p>
+        </select>
+        <img src="<% ui_url %>/images/iconza-red-16/info_16x16.png" class="infotip" title="The logger type.<br/>'Cycle Analyst' is the most common format.">
+        </p>
     <div id="CycleAnalyst">
     <p><b>Please note, when submitting a Cycle Analyst data set, both the Log and GPS files must be provided.</b></p>
     <p>
-        <label for"ca_log_hz">Log file measurements per second:</label> <select name="ca_log_hz" id="ca_log_hz" class="required">
-            <option></option>
+        <label for"ca_log_hz">Log file measurements per second:</label>
+        <select name="ca_log_hz" id="ca_log_hz" class="required">
             <option></option>
             <option>1Hz</option>
             <option>5Hz</option>
-        </select></p>
+        </select> 
+        <img src="<% ui_url %>/images/iconza-red-16/info_16x16.png" class="infotip" title="The CycleAnalyst log file can record data at an interval of either 1 or 5 times per second.">
+        </p>
     <p><label for "ca_log_file">CA Log File:</label> <input type="file" name="ca_log_file" class="required"></p>
     <p><label for "ca_gps_file">CA GPS File:</label> <input type="file" name="ca_gps_file" class="required"></p>
     </div>
@@ -58,7 +113,16 @@ The following errors occurred:
         <option value="public">Public</option>
         <option value="unlisted">Unlisted</option>
         <option value="private">Private</option>
-    </label></p>
+    </select>
+        <img src="<% ui_url %>/images/iconza-red-16/info_16x16.png" class="infotip_big">
+        <div class="tooltipbig">
+        <ul>
+        <li>Public: Anyone can see, will be shown on the public list page.</li>
+        <li>Unlisted: Anyone can see but must use direct link. Trip will not be shown on the public list page.</li>
+        <li>Private: Only the owner can view the ride</li>
+        </ul>
+        </div>
+    </p>
     <input type=submit name=press value="OK">
 </form>
 

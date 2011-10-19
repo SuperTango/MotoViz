@@ -15,6 +15,7 @@
 /* ]]> */</script>
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.tools.min.js"></script>
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
