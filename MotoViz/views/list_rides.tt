@@ -208,9 +208,9 @@ $(document).ready(function() {
                 "bSortable": false,
                 "fnRender": 
                 function ( oObj ) {
-                    return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '"><span class="ui-icon ui-icon-zoomin"></span></a>' +
-                           '<a href="#" onClick="deleteRide( oTable.fnGetPosition ( this.parentNode.parentNode ) );  return false;"><span class="ui-icon ui-icon-trash"></span></a>' +
-                           '<a href="#" onClick="editRide( oTable.fnGetPosition ( this.parentNode.parentNode ) ); return false;"><span class="ui-icon ui-icon-pencil"></span></a>';
+                    return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '"><img src="<% ui_url %>/images/iconza-red-16/lens_16x16.png"></a>' +
+                           '<a href="#" onClick="deleteRide( oTable.fnGetPosition ( this.parentNode.parentNode ) );  return false;"><img src="<% ui_url %>/images/iconza-red-16/trash_16x16.png"></a>' +
+                           '<a href="#" onClick="editRide( oTable.fnGetPosition ( this.parentNode.parentNode ) ); return false;"><img src="<% ui_url %>/images/iconza-red-16/edit_16x16.png"></a>';
                 } 
             },
             {
