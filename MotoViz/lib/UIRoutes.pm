@@ -414,12 +414,8 @@ get '/v1/points_client/:user_id/:ride_id' => sub {
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
     my $client_json = $ride_path . '/motoviz_output.out.client.json';
     my $fh;
-    content_type 'application/json';
     #debug ( "client_json: " . $client_json );
-    local $/ = undef;
-    open ( $fh, $client_json ) || die;
-    my $line = <$fh>;
-    return $line;
+    return send_file ( $client_json, content_type => 'application/json', system_path => 1 );
 };
 
 get '/v1/rides' => sub {
