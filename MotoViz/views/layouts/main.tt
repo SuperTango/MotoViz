@@ -41,9 +41,12 @@
     <a href="<% ui_url %>/update_registration">Update account</a> |
     <a href="<% ui_url %>/logout">Logout</a>
 <% ELSE %>
-    Not Logged In! <a href="<% ui_url %>/login">Login</a>
+    Not Logged In! <a href="<% ui_url %>/login">Login</a> |
+    <a href="<% ui_url %>/register">Register</a> |
 <% END %>
+<div style="display: none">
  | Powered by <a href="http://perldancer.org/">Dancer</a> <% dancer_version %>
+</div>
 </div>
 </body>
 </html>

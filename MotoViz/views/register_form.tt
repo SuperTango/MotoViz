@@ -10,7 +10,7 @@
 </style>
 <div id="BETA_ONLY">
     <p>Please Note: EVVisualizer is in a limited test phase, so only pre-approved people may register at this time.<br/>
-    If you would like to be added to the test group, please <a href="mailto:altitude@funkware.com?Subject=EVViz Alpha Request">Email Alex</a>.</p>
+    If you would like to be added to the test group, please <a href="mailto:altitude@funkware.com?Subject=EVViz Test Account Request">Email Alex</a>.</p>
 </div>
 <form action="<% ui_url %>/register" method=post>
 Please register. All fields are required.

@@ -9,4 +9,5 @@
     <dd><input type=submit value=Login>
   </dl>
 </form>
+<a href="<% ui_url %>/register">Register new Account</a>
 
