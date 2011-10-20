@@ -46,7 +46,7 @@ sub getRideInfo {
 sub updateRideInfo {
     my $user_id = shift;
     my $ride_id = shift;
-    my $ride_data = shift;
+    my $ride_info = shift;
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
     my $ride_file = $ride_path . '/motoviz_output.out.meta';
     my $tmp_file = $ride_file . '.tmp';
@@ -58,7 +58,7 @@ sub updateRideInfo {
         error ( "coudn't open tmp file: $!" );
         return undef;
     }
-    print $output_meta_fh to_json ( $ride_data, { pretty => 1, canonical => 1 } );
+    print $output_meta_fh to_json ( $ride_info, { pretty => 1, canonical => 1 } );
 
     close ( $output_meta_fh );
 

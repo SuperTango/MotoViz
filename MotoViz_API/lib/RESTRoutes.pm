@@ -121,19 +121,19 @@ get '/v1/ride/:user_id' => sub {
 
 put '/v1/ride/:user_id/:ride_id' => sub {
     my $ride_info = MotoViz::RideInfo::getRideInfo ( params->{'user_id'}, params->{'ride_id'} );
-    my $ride_data_new = from_json request->body;
+    my $ride_info_new = from_json request->body;
     debug ( "Got here!" );
-    debug ( pp ( $ride_data_new ) );
+    debug ( pp ( $ride_info_new ) );
     if ( ! $ride_info ) {
         status 'not found';
         return 'not found';
     }
 
-    my $new_title = $ride_data_new->{'title'};
+    my $new_title = $ride_info_new->{'title'};
     if ( $new_title ) {
         $ride_info->{'title'} = $new_title;
     }
-    $ride_info->{'visibility'} = $ride_data_new->{'visibility'} || 'private';
+    $ride_info->{'visibility'} = $ride_info_new->{'visibility'} || 'private';
     
     debug ( pp ( $ride_info ) );
     my $ret = MotoViz::RideInfo::updateRideInfo ( params->{'user_id'}, params->{'ride_id'}, $ride_info );

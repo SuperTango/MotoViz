@@ -62,7 +62,7 @@ sub generateOutputFile {
         return { code => -1, message => 'failed to open new_data log file for writing: ' . $new_data_file . '. Error: ' . $! };
     }
 
-    my $ride_data = {
+    my $ride_info = {
         'lat_min' => 1000,
         'lat_max' => -1000,
         'lon_min' => 1000,
@@ -109,18 +109,18 @@ sub generateOutputFile {
                 # needed for DB datastore.
                 # make sure you 'use Dancer::Plugin::DBIC';
                 #
-            #my $row = schema->resultset('Ride')->find( $ride_data->{'ride_id'} );
+            #my $row = schema->resultset('Ride')->find( $ride_info->{'ride_id'} );
             #if ( $row ) {
             #    $row->delete;
             #}
-            #my $new_ride = schema->resultset('Ride')->create( $ride_data );
+            #my $new_ride = schema->resultset('Ride')->create( $ride_info );
 
             print $new_data_fh to_json ( $new_data );
             close ( $new_data_fh );
 
-            $ride_data->{'speed_avg'} = $speed_total / $ride_data->{'points_count'};
-            $ride_data->{'wh_per_mile'} = $ride_data->{'wh_total'} / $ride_data->{'distance_gps_total'};
-            $ride_data->{'miles_per_kwh'} = $ride_data->{'distance_gps_total'} / ( $ride_data->{'wh_total'} / 1000 );
+            $ride_info->{'speed_avg'} = $speed_total / $ride_info->{'points_count'};
+            $ride_info->{'wh_per_mile'} = $ride_info->{'wh_total'} / $ride_info->{'distance_gps_total'};
+            $ride_info->{'miles_per_kwh'} = $ride_info->{'distance_gps_total'} / ( $ride_info->{'wh_total'} / 1000 );
 
             my $limitPoints = 100;
             my $mod = int ( scalar ( @{$latLonArray} ) / $limitPoints );
@@ -133,13 +133,13 @@ sub generateOutputFile {
                     $lastInt = $tmp;
                 }
             }
-            $ride_data->{'map_polyline'} = Algorithm::GooglePolylineEncoding::encode_polyline(@latLonTrimmed);
+            $ride_info->{'map_polyline'} = Algorithm::GooglePolylineEncoding::encode_polyline(@latLonTrimmed);
 
                 #
                 # needed for file datastore
                 #
-            $ride_data->{'input_data_type'} = $self->{'input_processor'}->getInputType();
-            print $output_meta_fh to_json ( $ride_data, { pretty => 1, canonical => 1 } );
+            $ride_info->{'input_data_type'} = $self->{'input_processor'}->getInputType();
+            print $output_meta_fh to_json ( $ride_info, { pretty => 1, canonical => 1 } );
             return { code => 1, message => 'done!' };
         }
         my $record = $ret->{'data'};
@@ -150,31 +150,31 @@ sub generateOutputFile {
         }
 
         if ( exists ( $record->{'lat'} ) ) {
-            $ride_data->{'lat_min'} = $record->{'lat'} if ( $record->{'lat'} < $ride_data->{'lat_min'} );
-            $ride_data->{'lat_max'} = $record->{'lat'} if ( $record->{'lat'} > $ride_data->{'lat_max'} );
-            $ride_data->{'lon_min'} = $record->{'lon'} if ( $record->{'lon'} < $ride_data->{'lon_min'} );
-            $ride_data->{'lon_max'} = $record->{'lon'} if ( $record->{'lon'} > $ride_data->{'lon_max'} );
-            if ( ! $ride_data->{'lat_start'} ) {
-                $ride_data->{'lat_start'} = $record->{'lat'};
-                $ride_data->{'lon_start'} = $record->{'lon'};
-                $ride_data->{'time_start'} = $record->{'time'};
+            $ride_info->{'lat_min'} = $record->{'lat'} if ( $record->{'lat'} < $ride_info->{'lat_min'} );
+            $ride_info->{'lat_max'} = $record->{'lat'} if ( $record->{'lat'} > $ride_info->{'lat_max'} );
+            $ride_info->{'lon_min'} = $record->{'lon'} if ( $record->{'lon'} < $ride_info->{'lon_min'} );
+            $ride_info->{'lon_max'} = $record->{'lon'} if ( $record->{'lon'} > $ride_info->{'lon_max'} );
+            if ( ! $ride_info->{'lat_start'} ) {
+                $ride_info->{'lat_start'} = $record->{'lat'};
+                $ride_info->{'lon_start'} = $record->{'lon'};
+                $ride_info->{'time_start'} = $record->{'time'};
             }
-            $ride_data->{'lat_end'} = $record->{'lat'};
-            $ride_data->{'lon_end'} = $record->{'lon'};
-            $ride_data->{'time_end'} = $record->{'time'};
-            $ride_data->{'distance_sensor_total'} = $record->{'distance_sensor_total'};
+            $ride_info->{'lat_end'} = $record->{'lat'};
+            $ride_info->{'lon_end'} = $record->{'lon'};
+            $ride_info->{'time_end'} = $record->{'time'};
+            $ride_info->{'distance_sensor_total'} = $record->{'distance_sensor_total'};
 
             if ( $record->{'speed_gps'} ) {
-                if ( $record->{'speed_gps'} > $ride_data->{'speed_max'} ) {
-                    $ride_data->{'speed_max'} = $record->{'speed_gps'};
+                if ( $record->{'speed_gps'} > $ride_info->{'speed_max'} ) {
+                    $ride_info->{'speed_max'} = $record->{'speed_gps'};
                 }
                 $speed_total += $record->{'speed_gps'};
             }
             push ( @{$latLonArray}, { lat => $record->{'lat'}, lon => $record->{'lon'} } );
         }
-        $ride_data->{'wh_total'} += ( $record->{'battery_watt_hours'} ) ? $record->{'battery_watt_hours'} : 0;
-        $ride_data->{'points_count'}++;
-        $ride_data->{'distance_gps_total'} = $record->{'distance_gps_total'};
+        $ride_info->{'wh_total'} += ( $record->{'battery_watt_hours'} ) ? $record->{'battery_watt_hours'} : 0;
+        $ride_info->{'points_count'}++;
+        $ride_info->{'distance_gps_total'} = $record->{'distance_gps_total'};
 
         print $output_fh to_json ( $record, { pretty => 0, canonical => 1 } ). "\n";
     }
