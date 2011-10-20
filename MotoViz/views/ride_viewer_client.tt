@@ -500,7 +500,10 @@ function processData() {
             selecting: onChartSelecting,
         },
       },
-       title: {
+      credits: { 
+        enabled: false
+      },
+      title: {
          text: ''
       },
       /*
