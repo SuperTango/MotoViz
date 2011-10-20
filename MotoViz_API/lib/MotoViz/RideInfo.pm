@@ -35,7 +35,11 @@ sub getRideInfo {
     }
     local $/ = undef;
     my $ride_info_str = <$fh>;
-    my $ride_info = from_json ( $ride_info_str );
+    my $ride_info = eval { from_json ( $ride_info_str ) };
+    if ( $@ ) {
+        warning ( 'Failed to get data from file: ' . $ride_info_str . '. Error: ' . $@ );
+        return undef;
+    }
     return $ride_info;
 }
 
