@@ -429,7 +429,6 @@ get '/v1/rides' => sub {
     }
     my $ret = get_ride_infos();
     my $data;
-    my $viewer_url = setting ( "motoviz_ui_url" ) . '/viewer_client/';
     debug ( pp ( $ret ) );
     if ( $ret->{'code'} == 1 ) {
         $data = { aaData => $ret->{'data'} };
@@ -496,33 +495,7 @@ get '/delete_ride/:ride_id' => sub {
     }
 };
 
-get '/viewer_server/:ride_id' => sub {
-    if ( my $login_page = ensure_logged_in() ) {
-        return $login_page;
-    }
-    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
-    debug ( "URL: " . $url );
-    my $ua = LWP::UserAgent->new;
-    my $response = $ua->get ( $url );
-    debug ( "response status: " . $response->status_line );
-    if ( $response->is_success ) {
-        my $ride_info = from_json ( $response->decoded_content );
-        debug ( pp ( $ride_info ) );
-        motoviz_template 'ride_viewer.tt', {
-            user_id => session('user')->{'user_id'},
-            ride_id => params->{'ride_id'},
-            title => $ride_info->{'title'},
-        }, { layout => undef };
-    } else {
-        if ( $response->code() == 404 ) {
-            debug ( "no rides for this user." );
-        } else {
-            debug ( "internal error" );
-        }
-    }
-};
-
-get '/viewer_client/:user_id/:ride_id' => sub {
+get '/viewer/:user_id/:ride_id' => sub {
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . params->{'user_id'} . '/' . params->{'ride_id'};
     debug ( "URL: " . $url );
     my $ua = LWP::UserAgent->new;

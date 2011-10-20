@@ -142,7 +142,7 @@ $(document).ready(function() {
                 function ( oObj ) {
                     //console.log ( oObj );
                     oObj.aData.title2 = oObj.aData.title;
-                    oObj.aData.viewUrl = '/viewer_client/' + oObj.aData.user_id + '/' + oObj.aData.ride_id;
+                    oObj.aData.viewUrl = '/viewer/' + oObj.aData.user_id + '/' + oObj.aData.ride_id;
                     return '<a href="' + oObj.aData.viewUrl + '">' + oObj.aData.title + '</a>';
                 }
             },
@@ -208,7 +208,7 @@ $(document).ready(function() {
                 "bSortable": false,
                 "fnRender": 
                 function ( oObj ) {
-                    return '<a href="' + '/viewer_client/' + oObj.aData.ride_id + '"><img src="<% ui_url %>/images/iconza-red-16/lens_16x16.png"></a>' +
+                    return '<a href="' + oObj.aData.viewUrl + '"><img src="<% ui_url %>/images/iconza-red-16/lens_16x16.png"></a>' +
                            '<a href="#" onClick="deleteRide( oTable.fnGetPosition ( this.parentNode.parentNode ) );  return false;"><img src="<% ui_url %>/images/iconza-red-16/trash_16x16.png"></a>' +
                            '<a href="#" onClick="editRide( oTable.fnGetPosition ( this.parentNode.parentNode ) ); return false;"><img src="<% ui_url %>/images/iconza-red-16/edit_16x16.png"></a>';
                 } 
