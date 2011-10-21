@@ -30,7 +30,7 @@ sub getRideInfo {
     debug ( 'ride_id: ' . $ride_id );
     debug ( 'ride_path: ' . $ride_path );
     my $fh;
-    if ( ! open ( $fh, $ride_path . '/motoviz_output.out.meta' ) ) {
+    if ( ! open ( $fh, $ride_path . '/ride_info.json' ) ) {
         return undef;
     }
     local $/ = undef;
@@ -48,7 +48,7 @@ sub updateRideInfo {
     my $ride_id = shift;
     my $ride_info = shift;
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
-    my $ride_file = $ride_path . '/motoviz_output.out.meta';
+    my $ride_file = $ride_path . '/ride_info.json';
     my $tmp_file = $ride_file . '.tmp';
     debug ( 'user_id: ' . $user_id );
     debug ( 'ride_id: ' . $ride_id );

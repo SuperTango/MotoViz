@@ -33,34 +33,17 @@ sub init {
     return { code => 1, message => 'success' };
 }
 
-sub generateOutputFile {
+sub generateOutputFiles {
     my $self = shift;
-    my $output_file = shift;
+    my $output_dir = shift;
 
     my $user_id = $self->{'user_id'};
     my $ride_id = $self->{'ride_id'};
 
-    if ( ! $output_file ) {
-        $output_file = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id . '/motoviz_output.out';
+    if ( ! $output_dir ) {
+        $output_dir = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
     }
 
-    my $output_meta_file = $output_file . '.meta';
-
-    my $output_fh;
-    if ( ! open ( $output_fh, '>', $output_file ) ) {
-        return { code => -1, message => 'failed to open output log file for writing: ' . $output_file . '. Error: ' . $! };
-    }
-
-    my $output_meta_fh;
-    if ( ! open ( $output_meta_fh, '>', $output_meta_file ) ) {
-        return { code => -1, message => 'failed to open output_meta log file for writing: ' . $output_meta_file . '. Error: ' . $! };
-    }
-
-    my $new_data_fh;
-    my $new_data_file = $output_file . '.client.json';
-    if ( ! open ( $new_data_fh, '>', $new_data_file ) ) {
-        return { code => -1, message => 'failed to open new_data log file for writing: ' . $new_data_file . '. Error: ' . $! };
-    }
 
     my $ride_info = {
         'lat_min' => 1000,
@@ -75,13 +58,13 @@ sub generateOutputFile {
         input_data_source => $self->{'input_processor'}->getInputInfo(),
         title => $self->{'title'},
         visibility => $self->{'visibility'},
-        output_file => $output_file,
         wh_total => 0,
     };
 
     my $speed_total;
     my $ret;
     my $new_data = { 
+        altitude => [],
         battery_amps => [],
         battery_volts => [],
         battery_watt_hours => [],
@@ -105,22 +88,10 @@ sub generateOutputFile {
     while ( $ret = $self->{'input_processor'}->getNextRecord() ) {
         if ( $ret->{'code'} == 0 ) {
                 
-                #
-                # needed for DB datastore.
-                # make sure you 'use Dancer::Plugin::DBIC';
-                #
-            #my $row = schema->resultset('Ride')->find( $ride_info->{'ride_id'} );
-            #if ( $row ) {
-            #    $row->delete;
-            #}
-            #my $new_ride = schema->resultset('Ride')->create( $ride_info );
-
-            print $new_data_fh to_json ( $new_data );
-            close ( $new_data_fh );
-
             $ride_info->{'speed_avg'} = $speed_total / $ride_info->{'points_count'};
             $ride_info->{'wh_per_mile'} = $ride_info->{'wh_total'} / $ride_info->{'distance_gps_total'};
             $ride_info->{'miles_per_kwh'} = $ride_info->{'distance_gps_total'} / ( $ride_info->{'wh_total'} / 1000 );
+            $ride_info->{'input_data_type'} = $self->{'input_processor'}->getInputType();
 
             my $limitPoints = 100;
             my $mod = int ( scalar ( @{$latLonArray} ) / $limitPoints );
@@ -135,15 +106,40 @@ sub generateOutputFile {
             }
             $ride_info->{'map_polyline'} = Algorithm::GooglePolylineEncoding::encode_polyline(@latLonTrimmed);
 
-                #
-                # needed for file datastore
-                #
-            $ride_info->{'input_data_type'} = $self->{'input_processor'}->getInputType();
+                # write files to disk
+            my $combined_data_file = $output_dir . '/combined.json';
+            my $combined_data_fh;
+            if ( ! open ( $combined_data_fh, '>', $combined_data_file ) ) {
+                return { code => -1, message => 'failed to open new_data log file for writing: ' . $combined_data_file . '. Error: ' . $! };
+            }
+            print $combined_data_fh to_json ( $new_data );
+            close ( $combined_data_fh );
+
+debug ( pp ( $ride_info ) );
+            foreach my $metric ( @{$ride_info->{'metrics'}} ) {
+                my $metric_file = $output_dir . '/metric-' . $metric . '.json';
+                my $metric_fh;
+                if ( ! open ( $metric_fh, '>', $metric_file ) ) {
+                    return { code => -1, message => 'failed to open metrics log file for writing: ' . $metric_file . '. Error: ' . $! };
+                }
+                debug ( "dumping metric: " . $metric );
+                print $metric_fh to_json ( $new_data->{$metric} );
+                close ( $metric_fh );
+            }
+
+            my $output_meta_file = $output_dir . '/ride_info.json';
+            my $output_meta_fh;
+            if ( ! open ( $output_meta_fh, '>', $output_meta_file ) ) {
+                return { code => -1, message => 'failed to open output_meta log file for writing: ' . $output_meta_file . '. Error: ' . $! };
+            }
             print $output_meta_fh to_json ( $ride_info, { pretty => 1, canonical => 1 } );
             return { code => 1, message => 'done!' };
         }
         my $record = $ret->{'data'};
         next if ( ! $record->{'lat'} );
+        if ( ! $ride_info->{'metrics'} ) {
+            @{$ride_info->{'metrics'}} = grep ( !/ride_id/, ( sort ( keys ( %{$record} ) ) ) );
+        }
         foreach my $key ( keys ( %{$new_data} ) ) {
             my $value = $record->{$key} || 0;
             push ( @{$new_data->{$key}}, $value + 0 );
@@ -175,8 +171,6 @@ sub generateOutputFile {
         $ride_info->{'wh_total'} += ( $record->{'battery_watt_hours'} ) ? $record->{'battery_watt_hours'} : 0;
         $ride_info->{'points_count'}++;
         $ride_info->{'distance_gps_total'} = $record->{'distance_gps_total'};
-
-        print $output_fh to_json ( $record, { pretty => 0, canonical => 1 } ). "\n";
     }
     return { code => -1, message => 'should never get here!' };
 }

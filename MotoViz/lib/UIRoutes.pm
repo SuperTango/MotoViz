@@ -412,10 +412,23 @@ get '/v1/points_client/:user_id/:ride_id' => sub {
     my $ride_id = params->{'ride_id'};
     my $user_id = params->{'user_id'};
     my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
-    my $client_json = $ride_path . '/motoviz_output.out.client.json';
+    my $combined_json = $ride_path . '/combined.json';
     my $fh;
-    #debug ( "client_json: " . $client_json );
-    return send_file ( $client_json, content_type => 'application/json', system_path => 1 );
+    #debug ( "combined_json: " . $combined.json );
+    return send_file ( $combined_json, content_type => 'application/json', system_path => 1 );
+};
+
+get '/v1/metric/:user_id/:ride_id/:metric' => sub {
+    my $ride_id = params->{'ride_id'};
+    my $user_id = params->{'user_id'};
+    my $metric = params->{'metric'};
+    my $ride_path = setting ( 'raw_log_dir' ) . '/' . $user_id . '/' . $ride_id;
+    my $metric_file = $ride_path . '/metric-' . $metric . '.json';
+    if ( ! -f $metric_file ) {
+        status 404;
+        return "metric not found";
+    }
+    return send_file ( $metric_file, content_type => 'application/json', system_path => 1 );
 };
 
 get '/v1/rides' => sub {
