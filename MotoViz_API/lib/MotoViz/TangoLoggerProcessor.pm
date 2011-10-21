@@ -102,6 +102,9 @@ sub getNextRecord {
         $record->{'distance_sensor_delta'} = $record->{'distance_rpm'};
         $record->{'lat'} = $hash->{'lat'};
         $record->{'lon'} = $hash->{'lon'};
+        $record->{'altitude'} = $hash->{'altitude'} || 0;
+        $record->{'motor_temp_controller'} = $hash->{'motor_temp'} || 0;
+        $record->{'motor_temp_sensor'} = $hash->{'motor_temp_calc'} || 0;
         #$record->{'distance_sensor_total'} = 
         #$record->{'battery_amp_hours'} = 
         if ( $self->{'last_record'} ) {

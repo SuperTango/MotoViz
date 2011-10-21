@@ -73,6 +73,8 @@ sub generateOutputFiles {
         distance_sensor_delta => [],
         lat => [],
         lon => [],
+        motor_temp_controller => [],
+        motor_temp_sensor => [],
         milesPerKWh => [],
         speed_gps => [],
         speed_sensor => [],

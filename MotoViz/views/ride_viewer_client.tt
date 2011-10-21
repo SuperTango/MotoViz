@@ -77,7 +77,11 @@ var fields = new Array (
     { metric: 'whPerMile', name: 'WattHours/Mile' },
     { metric: 'milesPerKWh', name: 'Miles/KWattHour' },
     { metric: 'speed_gps', name: 'Speed(GPS)' },
-    { metric: 'speed_sensor', name: 'Speed(Sensor)' } );
+    { metric: 'speed_sensor', name: 'Speed(Sensor)' },
+    { metric: 'altitude', name: 'Elevation' },
+    { metric: 'motor_temp_controller', name: 'Motor Temp (controller)' },
+    { metric: 'motor_temp_sensor', name: 'Motor Temp (direct sensor)' }
+     );
 
 var colors = ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4'];
 
