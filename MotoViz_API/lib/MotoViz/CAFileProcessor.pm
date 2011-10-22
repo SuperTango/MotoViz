@@ -54,7 +54,6 @@ sub init {
     $self->{'last_record'} = undef;
     $self->{'point_num'} = 0;
     $self->{'speed_total'} = 0;
-    $self->{'time_last'} = 0;
     $self->{'ca_line_count'} = 0;
     $self->{'distance_gps_total'} = 0;
     return { code => 1, message => 'ok' };
@@ -110,9 +109,8 @@ sub getNextRecord {
                     $self->{'distance_gps_total'} += $record->{'distance_gps_delta'};
                     $record->{'distance_gps_total'} = $self->{'distance_gps_total'};
 
-                    my $tDiff = $record->{'time'} - $self->{'time_last'};
-                    if ( $tDiff < 5000 ) {
-                        $record->{'wh'} = $record->{'watts'} * $tDiff / 3600000;
+                    if ( $record->{'time_diff'} < 5000 ) {
+                        $record->{'wh'} = $record->{'watts'} * $record->{'time_diff'} / 3600000;
                         if ( $record->{'distance_gps_delta'} > 0.0000001 ) {
                             $record->{'whPerMile'} = ( $record->{'distance_gps_delta'} ) ? $record->{'wh'} / $record->{'distance_gps_delta'} : 0;
                             $record->{'milesPerKWh'} = ( $record->{'distance_gps_delta'} ) ? $record->{'distance_gps_delta'} / $record->{'wh'} * 1000 : 0;
@@ -122,7 +120,6 @@ sub getNextRecord {
                             }
                         }
                     }
-                    $self->{'time_last'} = $tDiff;
                 }
                 $self->{'last_record'} = $record;
                 $self->{'last_gps_point'} = $gps_point;
