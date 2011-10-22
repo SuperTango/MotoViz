@@ -140,7 +140,8 @@ debug ( pp ( $ride_info ) );
         my $record = $ret->{'data'};
         next if ( ! $record->{'lat'} );
         if ( ! $ride_info->{'metrics'} ) {
-            @{$ride_info->{'metrics'}} = grep ( !/ride_id/, ( sort ( keys ( %{$record} ) ) ) );
+            #@{$ride_info->{'metrics'}} = grep ( !/ride_id/, ( sort ( keys ( %{$record} ) ) ) );
+            @{$ride_info->{'metrics'}} = keys ( %{$new_data} );
         }
         foreach my $key ( keys ( %{$new_data} ) ) {
             my $value = $record->{$key} || 0;
