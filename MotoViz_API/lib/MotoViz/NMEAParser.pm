@@ -138,18 +138,21 @@ sub parse_gprmc {
         return 1;
     }
 
-    my ( $lat_deg, $lat_min ) = $gps_lat =~ /(\d\d)(\d\d\.\d+)/;
-    my ( $lon_deg, $lon_min ) = $gps_lon =~ /(\d\d)(\d\d\.\d+)/;
-    $lat_deg += ( $lat_min / 60 );
-    $lat_deg = -$lat_deg if ( $lat_hem eq 'S' );
-    $record->{'lat'} = $lat_deg;
+    $record->{'lat'} = convertGPSLatLon ( $gps_lat, $lat_hem );
+    $record->{'lon'} = convertGPSLatLon ( $gps_lon, $lon_hem );
 
-    $lon_deg += ( $lon_min / 60 );
-    $lon_deg = -$lon_deg if ( $lon_hem eq 'W' );
-    $record->{'lon'} = $lon_deg;
     $record->{'speed_gps'} = $speed_gps *= 1.15077945;
     $record->{'bearing'} = $bearing;
     return 1;
+}
+
+sub convertGPSLatLon {
+    my $gps_reading = shift;
+    my $hem = shift;
+    my ( $deg, $min ) = $gps_reading =~ /(\d\d\d?)(\d\d\.\d+)/;
+    $deg += ( $min / 60 );
+    $deg = -$deg if ( ( $hem eq 'S' ) || ( $hem eq 'W' ) );
+    return $deg;
 }
 
 sub parse_gpgga {
@@ -169,15 +172,8 @@ sub parse_gpgga {
     if ( ! $lat_hem ) {
         return 1;
     }
-    my ( $lat_deg, $lat_min ) = $gps_lat =~ /(\d\d)(\d\d\.\d+)/;
-    my ( $lon_deg, $lon_min ) = $gps_lon =~ /(\d\d)(\d\d\.\d+)/;
-    $lat_deg += ( $lat_min / 60 );
-    $lat_deg = -$lat_deg if ( $lat_hem eq 'S' );
-    $record->{'lat'} = $lat_deg;
-
-    $lon_deg += ( $lon_min / 60 );
-    $lon_deg = -$lon_deg if ( $lon_hem eq 'W' );
-    $record->{'lon'} = $lon_deg;
+    $record->{'lat'} = convertGPSLatLon ( $gps_lat, $lat_hem );
+    $record->{'lon'} = convertGPSLatLon ( $gps_lon, $lon_hem );
     return 1;
 }
 
