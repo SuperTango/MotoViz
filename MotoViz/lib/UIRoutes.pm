@@ -18,6 +18,7 @@ my $acceptable_emails = {
     'tango@funkware.com' => 1,
     'tango1@funkware.com' => 1,
     'tango2@funkware.com' => 1,
+    'daveh225@acsalaska.net' => 1,
 };
 
 before sub {
