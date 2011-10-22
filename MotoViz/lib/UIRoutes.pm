@@ -252,7 +252,6 @@ post '/upload' => sub {
     my $visibility = params->{'visibility'} || 'private';
     my $input_data_type = params->{'input_data_type'};
     my $ca_log_file = request->upload ( 'ca_log_file' );
-    my $ca_log_hz = params->{'ca_log_hz'};
     my $ca_gps_file = request->upload ( 'ca_gps_file' );
     my $tango_file = request->upload ( 'tango_file' );
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
@@ -299,15 +298,9 @@ post '/upload' => sub {
                 $ca_gps_file = $ret->{'full_file'};
             }
 
-            if ( ! $ca_log_hz ) {
-                push ( @errors, 'The CA Log File measurements per second parameter must be provided' );
-            } elsif ( $ca_log_hz !~ /^\s*[15]Hz\s*$/ ) {
-                push ( @errors, 'The CA Log File measurements per second parameter must be either "1Hz" or "5Hz"' );
-            }
             $rest_params->{'input_data_type'} = "CycleAnalyst";
             $rest_params->{'ca_log_file'} = $ca_log_file;
             $rest_params->{'ca_gps_file'} = $ca_gps_file;
-            $rest_params->{'ca_log_hz'} = $ca_log_hz;
         }
     } elsif ( $input_data_type eq 'TangoLogger' ) {
         if ( ! $tango_file ) {

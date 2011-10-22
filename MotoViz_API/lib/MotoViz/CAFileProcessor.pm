@@ -34,6 +34,17 @@ sub init {
         return { code => -1, message => 'failed to open ca log file: ' . $self->{'ca_log_file'} . '. Error: ' . $! };
     }
 
+    my $ca_log_count = count_lines ( $self->{'ca_log_file'} );
+    my $ca_gps_count = count_lines ( $self->{'ca_gps_file'}, 1 );
+    if ( abs ( $ca_gps_count - $ca_log_count ) < 5 ) {
+        $self->{'log_frequency'} = 1;
+    } elsif ( abs ( $ca_gps_count - ( $ca_log_count / 5 ) ) < 5 ) {
+        $self->{'log_frequency'} = 5;
+    } else {
+        return { code => 0, message => 'Cannot calculate log frequency' };
+    }
+    debug ( "log_frequency: " . $self->{'log_frequency'} );
+
     my $nmea_parser = new MotoViz::NMEAParser;
     $ret = $nmea_parser->init ( $self->{'ca_gps_file'} );
     $self->{'nmea_parser'} = $nmea_parser;
@@ -78,7 +89,7 @@ sub getNextRecord {
         $record->{'point_num'} = $self->{'point_num'};
         chomp ( $ca_log_line );
         $self->{'ca_line_count'}++;
-        if ( ( $self->{'ca_line_count'} % 5 ) == 1 ) {
+        if ( ( $self->{'ca_line_count'} % $self->{'log_frequency'} ) == 0 ) {
             (   $record->{'battery_amp_hours'}, 
                 $record->{'battery_volts'}, 
                 $record->{'battery_amps'}, 
@@ -193,5 +204,17 @@ sub verifyNMEAFile {
 }
 
 
+sub count_lines {
+    my $file = shift;
+    my $gps = shift;
+    my $fh;
+    my $count;
+    open ( $fh, $file ) || die;
+    while ( my $line = <$fh> ) {
+        next if ( $gps && $line !~ /^\$GPRMC/ );
+        $count++;
+    }
+    return $count;
+}
 
 1;

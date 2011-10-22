@@ -94,15 +94,6 @@ The following errors occurred:
         </p>
     <div id="CycleAnalyst">
     <p><b>Please note, when submitting a Cycle Analyst data set, both the Log and GPS files must be provided.</b></p>
-    <p>
-        <label for"ca_log_hz">CA Log file measurement frequency:</label>
-        <select name="ca_log_hz" id="ca_log_hz" class="required">
-            <option></option>
-            <option>1Hz</option>
-            <option>5Hz</option>
-        </select> 
-        <img src="<% ui_url %>/images/iconza-red-16/info_16x16.png" class="infotip" title="The CycleAnalyst log file can record data at an interval of either 1 or 5 times per second.">
-        </p>
     <p><label for "ca_log_file">CA Log File:</label> <input type="file" name="ca_log_file" class="required"></p>
     <p><label for "ca_gps_file">CA GPS File:</label> <input type="file" name="ca_gps_file" class="required"></p>
     </div>
