@@ -110,7 +110,7 @@ sub getNextRecord {
                     $record->{'distance_gps_total'} = $self->{'distance_gps_total'};
 
                     if ( $record->{'time_diff'} < 5000 ) {
-                        $record->{'wh'} = $record->{'watts'} * $record->{'time_diff'} / 3600000;
+                        $record->{'wh'} = $record->{'watts'} * $record->{'time_diff'} / 3600;
                         if ( $record->{'distance_gps_delta'} > 0.0000001 ) {
                             $record->{'whPerMile'} = ( $record->{'distance_gps_delta'} ) ? $record->{'wh'} / $record->{'distance_gps_delta'} : 0;
                             $record->{'milesPerKWh'} = ( $record->{'distance_gps_delta'} ) ? $record->{'distance_gps_delta'} / $record->{'wh'} * 1000 : 0;
