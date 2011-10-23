@@ -1,13 +1,6 @@
 <% IF message %>
 <h2><% message %></h2>
 <% END %>
-<ul>
-    <% IF ! session.user %>
-    <li><a href="<% ui_url %>/login">Login</a></li>
-    <li><a href="<% ui_url %>/register">Register a new account</a></li>
-    <% ELSE %>
-    <li><a href="<% ui_url %>/update_registration">Update your account information</a></li>
-    <% END %>
-    <li><a href="<% ui_url %>/rides">List Rides</a></li>
-    <li><a href="<% ui_url %>/new_upload">Upload a new ride</a></li>
-</ul>
+
+Welcome to EVViz, the menu up in the top right corner will get you where you want to go.
+

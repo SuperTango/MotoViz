@@ -4,8 +4,9 @@ margin: 0;
 margin-bottom: 25px;
 padding: 0;
 background-color: #ddd;
+background-image:url('/images/EVVizBanner/images/EVVizBanner-1_11.png');
 /*background-image: url("/images/perldancer-bg.jpg");*/
-background-repeat: no-repeat;
+background-repeat: repeat;
 background-position: top left;
 font-family: 'Istok Web', sans-serif;
 font-size: 13px;
@@ -18,11 +19,13 @@ color: #000;
 }
 
 a  {color: #03c}
+/*
 a:hover {
 background-color: #03c;
 color: white;
 text-decoration: none;
 }
+*/
 
 #page {
 background-color: #ddd;
@@ -46,6 +49,12 @@ float: right;
 width: 175px;
 }
 
+#header {
+    height: 36px;
+    background-image:url('/images/EVVizBanner/images/EVVizBanner-1_02.png');
+    background-repeat:repeat-x;
+}
+/*
 #header, #about, #getting-started {
 padding-left: 75px;
 padding-right: 30px;
@@ -64,6 +73,7 @@ color: #888;
 font-weight: normal;
 font-size: 16px;
 }
+*/
 
 #about h3 {
 margin: 0;
@@ -225,4 +235,3 @@ tbody tr.odd:hover {
 th {
     text-align: left;
 }
-

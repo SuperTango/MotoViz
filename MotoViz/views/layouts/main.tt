@@ -7,6 +7,83 @@
 <title>EV Visualizer</title>
 <link rel="stylesheet" href="<% ui_url %>/css/style.css" />
 <link rel="stylesheet" href="<% ui_url %>/css/blitzer/jquery-ui-1.8.16.custom.css" />
+<style type="text/css">
+#Welcome { 
+    position: absolute; 
+    top: 0px; 
+    right: 470px; 
+    height: 36px; 
+    margin: 0px;
+    font-size: 13.25px; 
+    font-weight: bold; 
+    text-decoration: none; 
+    color: #fff; 
+    padding: 9px 3px 0 0; 
+}
+#navigation { 
+    position: absolute; 
+    top: 0px; 
+    right: -7px; 
+    width: 470px; 
+    height: 36px; 
+    background-image:url('/images/EVVizBanner/images/EVVizBanner-1_03.png');
+    background-repeat: repeat-x; 
+    overflow: hidden;
+    margin: 0px;
+    z-index: 100;
+}
+#navigation:hover { 
+    height: 127px;
+}
+#navigation > li { 
+    float: left; 
+}
+#navigation > li > a { 
+    display: block; 
+    height: 34px; 
+    padding: 9px 0 0 0; 
+    font-weight: bold; 
+    font-size: 13.25px; 
+    text-decoration: none; 
+    color: #fff; 
+    /*background-image: url(http://s3.amazonaws.com/juicesite/icons_navigation.png); */
+    background-repeat: no-repeat; 
+}
+ul.sub-menu {
+    padding-left: 0;
+}
+#navigation > li.Trips { 
+    width: 122px;
+}
+#navigation > li.Account { 
+    width: 97px;
+}
+#navigation > li.Help { 
+    width: 102px;
+}
+#navigation > li.About { 
+    width: 92px;
+}
+#navigation.menu {
+    padding-left: 10px;
+}
+#navigation > li.Trips2 > a { margin-right: 43px; padding-left: 41px; background-position: 8px -1px; width: 58px; }
+#navigation > li.gallery > a { margin-right: 34px; padding-left: 33px; background-position: -130px -1px; width: 60px; }
+#navigation > li.our-writing > a { margin-right: 26px; padding-left: 20px; background-position: -252px -1px; width: 76px; }
+#navigation > li.visualization-resources > a { margin-right: 10px; padding-left: 29px; background-position: -354px -1px; width: 157px;}
+#navigation > li.about-juice > a { padding-left: 23px; background-position: -544px -1px; width: 78px;}
+#navigation li { list-style: none; }
+#navigation li ul li { display: block; padding: 0 0 7px 0px; line-height: 12px; max-width: 99px; }
+#navigation li.Account ul li { display: block; padding: 0 0 7px 0px; line-height: 12px; max-width: 90px; }
+#navigation li.Help ul li { display: block; padding: 0 0 7px 0px; line-height: 12px; max-width: 90px; }
+#navigation li.gallery ul li { padding-left: 32px; max-width: 93px;}
+#navigation li.our-writing ul li { padding-left: 21px; max-width: 99px; }
+#navigation li.visualization-resources ul li { padding-left: 29px; max-width: 165px; }
+#navigation li.about-juice ul li { padding-left: 23px; max-width: 90px;}
+#navigation li ul li a { font-size: 12.5px; color: #dfeBFf; text-decoration: none; padding: 3px; margin: -3px; display: block; }
+#navigation li ul li a:hover { color: #fff; background: #259cf3; position: relative; }
+#navigation li ul li a:active { bottom: -2px; }
+</style>
 
 <!-- Grab Google CDN's jQuery. fall back to local if necessary -->
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
@@ -16,6 +93,8 @@
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.sprintf.js"></script>
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery-ui-1.8.16.custom.min.js"></script>
 <script type="text/javascript" src="<% ui_url%>/javascripts/jquery.tools.min.js"></script>
+<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.hoverIntent.minified.js"></script>
+<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.easing.1.3.js"></script>
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
@@ -28,25 +107,61 @@
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 
+    $(document).ready(function() {
+        $('#navigation').animate({'height': '36px'}, 10);
+
+        $('#navigation ul').fadeOut();
+        $('#header').hoverIntent({ 
+            over: function() {
+                $('#navigation').animate({'height': '127px'},{queue:false, duration:800, easing: 'easeOutBack'});
+                $('#navigation ul').fadeIn();
+            }, 
+            timeout: 500,
+            out: function() {
+                $('#navigation').animate({'height': '36px'}, {queue:false, duration:800, easing: 'easeInBack'});
+                $('#navigation ul').fadeOut();
+            } 
+        } );
+    } );
 </script>
 </head>
 <body>
+<div id="header"><img border=0 src="/images/EVVizBanner/images/EVVizBanner-1_01.png">
+<div id="Welcome">Welcome <% IF session.user %><% session.user.name %><% ELSE %>Guest<% END %></div>
+<ul id="navigation" class="menu">
+    <li class="Trips"><a>Trips</a>
+        <ul class="sub-menu">
+            <li><a>Publicly Viewable Trips</a></li>
+            <% IF session.user %> 
+            <li><a href="<% ui_url %>/rides">List Your Trips</a></li>
+            <li><a href="<% ui_url %>/new_upload">Upload a New Trip</a></li>
+            <% END %>
+        </ul>
+    </li>
+    <li class="Account"><a>Account</a>
+        <ul class="sub-menu">
+            <% IF session.user %> 
+            <li><a href="<% ui_url %>/update_registration">Update Account</a></li>
+            <li><a href="<% ui_url %>/logout">Logout</a></li>
+            <% ELSE %>
+            <li><a href="<% ui_url %>/login">Login</a></li>
+            <li><a href="<% ui_url %>/register">Register a New Account</a></li>
+            <% END %>
+        </ul>
+    </li>
+    <li class="Help"><a>Help</a>
+        <ul class="sub-menu">
+            <li><a>Call in the Experts</a></li>
+        </ul>
+    </li>
+    <li class="About"><a>About</a>
+        <ul class="sub-menu">
+            <li><a>Blog</a></li>
+        </ul>
+    </li>
+</ul></div>
 <% content %>
 <div id="footer">
-
-<% IF session.user %>
-    Logged in as <% session.user.name %>:  
-    <a href="<% ui_url %>/rides">List Rides</a> |
-    <a href="<% ui_url %>/new_upload">Upload Ride</a> |
-    <a href="<% ui_url %>/update_registration">Update account</a> |
-    <a href="<% ui_url %>/logout">Logout</a>
-<% ELSE %>
-    Not Logged In! <a href="<% ui_url %>/login">Login</a> |
-    <a href="<% ui_url %>/register">Register</a> |
-<% END %>
-<div style="display: none">
- | Powered by <a href="http://perldancer.org/">Dancer</a> <% dancer_version %>
-</div>
 </div>
 </body>
 </html>
