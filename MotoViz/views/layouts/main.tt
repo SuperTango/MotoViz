@@ -116,7 +116,7 @@ ul.sub-menu {
                 $('#navigation').animate({'height': '127px'},{queue:false, duration:800, easing: 'easeOutBack'});
                 $('#navigation ul').fadeIn();
             }, 
-            timeout: 500,
+            timeout: 100,
             out: function() {
                 $('#navigation').animate({'height': '36px'}, {queue:false, duration:800, easing: 'easeInBack'});
                 $('#navigation ul').fadeOut();
