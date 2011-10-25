@@ -3,8 +3,8 @@ body {
 margin: 0;
 margin-bottom: 25px;
 padding: 0;
-background-color: #ddd;
-background-image:url('/images/EVVizBanner/images/EVVizBanner-1_11.png');
+background-color: #FFFFFF;
+/*background-image:url('/images/EVVizBanner/images/EVVizBanner-1_11.png');*/
 /*background-image: url("/images/perldancer-bg.jpg");*/
 background-repeat: repeat;
 background-position: top left;
