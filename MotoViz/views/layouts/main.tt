@@ -113,12 +113,12 @@ ul.sub-menu {
         $('#navigation ul').fadeOut();
         $('#header').hoverIntent({ 
             over: function() {
-                $('#navigation').animate({'height': '127px'},{queue:false, duration:800, easing: 'easeOutBack'});
+                $('#navigation').animate({'height': '127px'},{queue:false, duration:300, easing: 'easeOutBack'});
                 $('#navigation ul').fadeIn();
             }, 
             timeout: 100,
             out: function() {
-                $('#navigation').animate({'height': '36px'}, {queue:false, duration:800, easing: 'easeInBack'});
+                $('#navigation').animate({'height': '36px'}, {queue:false, duration:300, easing: 'easeInBack'});
                 $('#navigation ul').fadeOut();
             } 
         } );
