@@ -46,6 +46,7 @@ The following errors occurred:
         <option<% IF user.timezone == 'America/Phoenix' %> selected<% END %>>America/Phoenix</option>
         <option<% IF user.timezone == 'America/Los_Angeles' %> selected<% END %>>America/Los_Angeles</option>
         </select></dd>
+    <dd><% captcha_html %></dd>
 </dl>    
 <input type=submit value=Register>
 

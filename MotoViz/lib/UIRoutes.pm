@@ -6,6 +6,7 @@ use File::Path;
 use LWP::UserAgent;
 use HTTP::Request;
 use HTML::Entities;
+use Captcha::reCAPTCHA;
 
 use MotoViz::UserStore;
 
@@ -105,6 +106,8 @@ any ['get', 'post'] => '/register' => sub {
     if ( session('user') ) {
         return motoviz_template 'indexnew.tt', { message => 'You are already logged in, registration not neeed or allowed' };
     }
+    my $captcha = Captcha::reCAPTCHA->new;
+    my $captcha_html = $captcha->get_html("6Ldm0skSAAAAAEw6Z_j9U4-LWerS33XQFMTTCb3Z");
     if ( request->method() eq "POST" ) {
         my $userStore =  MotoViz::UserStore->new ( setting ( 'password_file' ) );
         my $user = {};
@@ -122,6 +125,11 @@ any ['get', 'post'] => '/register' => sub {
             push ( @errors, "Both passwords must exist and, they must be the same." );
         }
 
+        my $result = $captcha->check_answer( '6Ldm0skSAAAAAIAFs_w8vA_HjZrLkmDq9XXaIu4C', request->remote_address, params->{'recaptcha_challenge_field'}, params->{'recaptcha_response_field'} );
+        if ( ! $result->{is_valid} ) {
+            push ( @errors, 'The captcha response was incorrect. Please try again' );
+        }
+
         my $ret = $userStore->getUserFromEmail ( params->{'email'} );
         if ( $ret->{'code'} > 0 ) {
             if ( $ret->{'data'} ) {
@@ -134,7 +142,7 @@ any ['get', 'post'] => '/register' => sub {
         }
 
         if ( @errors ) {
-            return motoviz_template 'register_form.tt', { errors => \@errors, user => $user };
+            return motoviz_template 'register_form.tt', { captcha_html => $captcha_html, errors => \@errors, user => $user };
         }
 
         $user->{'password_plaintext'} = $user->{'password1'};
@@ -145,17 +153,17 @@ any ['get', 'post'] => '/register' => sub {
         $ret = $userStore->updateUser ( $user );
         if ( $ret->{'code'} == 0 ) {
             log_error ( 'internal validation failed when registering user: ' . pp ( $user ) );
-            return motoviz_template 'register_form.tt', { user => $user, errors => [ 'validation failed' ] };
+            return motoviz_template 'register_form.tt', { captcha_html => $captcha_html, user => $user, errors => [ 'validation failed' ] };
         } elsif ( $ret->{'code'} < 0 ) {
             my $eid = log_error ( 'internal error when registering user: ' . pp ( $user ) );
-            return motoviz_template 'register_form.tt', { user => $user, errors => [ 'internal error: ' . $eid ] };
+            return motoviz_template 'register_form.tt', { captcha_html => $captcha_html, user => $user, errors => [ 'internal error: ' . $eid ] };
         }
 
         session 'user' => $user;
         motoviz_template 'indexnew.tt';
 
     } else {
-        motoviz_template 'register_form.tt';
+        return motoviz_template 'register_form.tt', { captcha_html => $captcha_html };
     }
 };
 
