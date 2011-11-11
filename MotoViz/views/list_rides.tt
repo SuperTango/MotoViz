@@ -131,7 +131,7 @@ function updateVisibility ( checkbox, rowId ) {
 
 $(document).ready(function() {
     oTable = $('#rides_datatable').dataTable ( {
-        "bJQueryUI" : true,
+        "bJQueryUI" : false,
         "aaSorting" : [ [ 2, 'asc' ] ],
         "sAjaxSource": '<% rides_url %>',
         "iDisplayLength": 50,
