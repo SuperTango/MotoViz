@@ -11,6 +11,7 @@ my $headers = {
     v1 => [ 'current_millis','diff_millis','count','iterations','date','time','speed_gps','speed_rpm','lat','lon','heading','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
     v2 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
     v3 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','failed_cs','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
+    v4 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','failed_cs','distance_gps','distance_rpm','batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
 };
 
 
@@ -26,6 +27,7 @@ sub init {
     my $ride_id = shift;
     $self->{'tango_file'} = shift;
     $self->{'id'} = 'TangoLogger_V1';
+    $self->{'rev'} = 1;
 
     $self->{'header'} = $headers->{'v1'};
     my $ret = $self->verifyTangoFile ( $self->{'tango_file'} );
@@ -75,6 +77,7 @@ sub getNextRecord {
     while ( $tango_line = <$fh> ) {
         if ( $tango_line =~ /LOGFMT (\d+)/ ) {
             my $rev = $1;
+            $self->{'rev'} = $rev;
             $self->{'id'} = 'TangoLogger_V' . $rev;
             $self->{'header'} = $headers->{'v' . $rev};
             next;
@@ -94,7 +97,7 @@ sub getNextRecord {
         } else {
             next;
         }
-        $record->{'battery_amps'} = $hash->{'batt_current'};
+        $record->{'battery_amps'} = ( $self->{'rev'} >= 4 ) ? $hash->{'batt_current_Avg'} : $hash->{'batt_current'};
         $record->{'battery_volts'} = $hash->{'batt_voltage'};
         $record->{'speed_sensor'} = $hash->{'speed_rpm'};
         $record->{'speed_gps'} = $hash->{'speed_gps'};
