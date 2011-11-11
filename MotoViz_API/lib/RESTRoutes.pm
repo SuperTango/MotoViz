@@ -216,8 +216,9 @@ sub process_ride {
     }
     if ( $ret->{'code'} <= 0 ) {
             # note, message goes to user
+        warning ( 'Failed calling init_processor.init: ' . pp ( $ret ) );
         my $ret = { code => 0, message => $ret->{'message'} };
-        warning ( pp ( $ret ) );
+        warning ( 'returning the following via REST: ' . pp ( $ret ) );
         return $ret;
     }
     $ret = process_input_files ( $user_id, $ride_id, $input_processor, $title, $visibility );
