@@ -22,6 +22,8 @@ div#table_container{
     width: 30%;
     height: 100%;
     float: left;
+    background: #FFFFFF;
+    overflow: auto;
 }
 div#chart_container{
     width: 70%;
@@ -41,9 +43,25 @@ td.th_title {
     font-weight: bold;
 }
 
-#table_container {
-    background: #FFFFFF;
+.panes div {
+    display:none;
+    padding:15px 10px;
+    border:1px solid #999;
+    border-top:0;
+    height:100px;
+    font-size:14px;
+    background-color:#fff;
 }
+
+ul.tabs {
+    font-size: 9px;
+}
+
+.ui-tabs .ui-tabs-panel {
+    padding:2px 2px;
+}
+
+
 </style>
 
 <script type="text/javascript">
@@ -618,6 +636,10 @@ function processData() {
     $(".zstripe tr").mouseout(function () {
         $(this).removeClass("over")
     });
+    //$("ul.tabs").tabs("div.panes > div");
+    $( "#tabs" ).tabs();
+
+
 }
 
 $(document).ready(function() {
@@ -634,52 +656,65 @@ $(document).ready(function() {
 <body>
     <div id="container">
         <div id="table_container">
-            <table id="summary_table" class="zstripe">
-                <tbody>
-                    <tr>
-                        <td class=th_title width="15%">Start:</td>
-                        <td id=table_time_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>Duration:</td>
-                        <td id=table_duration_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>Distance:</td>
-                        <td id=table_distance_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>Speed:</td>
-                        <td id=table_speed_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>Power:</td>
-                        <td id=table_power_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>Volts:</td>
-                        <td id=table_volts_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>Current:</td>
-                        <td id=table_current_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>WattHours (used/regen/total):</td>
-                        <td id=table_wh_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>Wh/mile:</td>
-                        <td id=table_whPerMile_value>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td class=th_title>miles/KWh:</td>
-                        <td id=table_milesPerKWh_value>&nbsp;</td>
-                    </tr>
-                </tbody>
-            </table>
-            <script type="text/javascript">
-            </script>
+            <div id="tabs">
+                <ul class="tabs">
+                    <li><a href="#tabs-1">Info</a></li>
+                    <li><a href="#tabs-2">Metrics</a></li>
+                    <li><a href="#tabs-3">Edit</a></li>
+                </ul>
+                <div id="tabs-1">
+                    <table id="summary_table" class="zstripe">
+                        <tbody>
+                            <tr>
+                                <td class=th_title width="15%">Start:</td>
+                                <td id=table_time_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>Duration:</td>
+                                <td id=table_duration_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>Distance:</td>
+                                <td id=table_distance_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>Speed:</td>
+                                <td id=table_speed_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>Power:</td>
+                                <td id=table_power_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>Volts:</td>
+                                <td id=table_volts_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>Current:</td>
+                                <td id=table_current_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>WattHours (used/regen/total):</td>
+                                <td id=table_wh_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>Wh/mile:</td>
+                                <td id=table_whPerMile_value>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class=th_title>miles/KWh:</td>
+                                <td id=table_milesPerKWh_value>&nbsp;</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="tabs-2">
+                    Metrics!
+                </div>
+                <div id="tabs-3">
+                    Edit!
+                </div>
+            </div>
         </div>
         <div id="chart_container"></div>
     </div>
