@@ -78,6 +78,7 @@ sub generateOutputFiles {
         milesPerKWh => [],
         speed_gps => [],
         speed_sensor => [],
+        throttle_percent => [],
         time => [],
         time_diff => [],
         watts => [],
