@@ -494,23 +494,6 @@ get '/v1/delete_ride/:ride_id' => sub {
     status ( $response->code );
 };
 
-get '/delete_ride/:ride_id' => sub {
-    if ( my $login_page = ensure_logged_in() ) {
-        return $login_page;
-    }
-    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'} . '/' . params->{'ride_id'};
-    debug ( 'calling delete url: ' . $url );
-    my $request = HTTP::Request->new ( 'DELETE', $url );
-    my $ua = LWP::UserAgent->new;
-    my $response = $ua->request ( $request );
-    debug ( pp ( $response ) );
-    if ( $response->code == 204 ) {
-        return do_rides_page();
-    } else {
-        status ( $response->code );
-    }
-};
-
 get '/viewer/:user_id/:ride_id' => sub {
     my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . params->{'user_id'} . '/' . params->{'ride_id'};
     debug ( "URL: " . $url );
