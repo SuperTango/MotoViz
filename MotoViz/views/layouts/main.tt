@@ -131,9 +131,9 @@ ul.sub-menu {
 <ul id="navigation" class="menu">
     <li class="Trips"><a>Trips</a>
         <ul class="sub-menu">
-            <li><a>Publicly Viewable Trips</a></li>
+            <li><a href="<% ui_url%>/public_rides">Publicly Viewable Trips</a></li>
             <% IF session.user %> 
-            <li><a href="<% ui_url %>/rides">List Your Trips</a></li>
+            <li><a href="<% ui_url %>/my_rides">Your Trips</a></li>
             <li><a href="<% ui_url %>/new_upload">Upload a New Trip</a></li>
             <% END %>
         </ul>
