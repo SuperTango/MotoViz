@@ -400,6 +400,7 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
     if ( updateChart ) {
         var count = 0;
         $.each ( fields, function ( index, value ) {
+            //console.log ( "field: " + index + ", " + value.name );
             seriesArray[count].data = seriesHash[value.metric];
             //chart.series[count].setData ( seriesHash[value.metric] );
             if ( minMax[value.metric].max < 1 ) {
@@ -422,6 +423,7 @@ function setStartEnd ( start, end, mapLine, updateMapBounds, updateChart ) {
 
         count = 0;
         $.each ( seriesArray, function ( index, value ) {
+            //console.log ( value );
             var shown = chart.series[0].visible;
             chart.series[0].remove( false );
             chart.addSeries ( seriesArray[count], false, false );
@@ -463,6 +465,7 @@ function processData() {
     seriesArray = new Array();
     var count = 0;
     $.each ( fields, function ( index, value ) {
+        //console.log ( value.name );
         seriesArray.push ( { type: 'line', name: value.name, color: colors[count % colors.length] } );
         count++;
     } );
