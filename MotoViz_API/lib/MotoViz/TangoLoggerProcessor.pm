@@ -108,7 +108,7 @@ sub getNextRecord {
         $record->{'altitude'} = $hash->{'altitude'} || 0;
         $record->{'motor_temp_controller'} = $hash->{'motor_temp'} || 0;
         $record->{'motor_temp_sensor'} = $hash->{'motor_temp_calc'} || 0;
-        $record->{'throttle_percent'} = $hash->{'tps_a/d'} || 0;
+        $record->{'throttle_percent'} = ( $hash->{'tps_a/d'} / 255 * 100 ) || 0;
         #$record->{'distance_sensor_total'} = 
         #$record->{'battery_amp_hours'} = 
         if ( $self->{'last_record'} ) {
