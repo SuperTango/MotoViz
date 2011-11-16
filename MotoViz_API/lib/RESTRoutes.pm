@@ -74,7 +74,7 @@ get '/v1/ride/:user_id/:ride_id' => sub {
 };
 
 get '/v1/ride/:user_id' => sub {
-    my $ride_infos = MotoViz::RideInfo::getRideInfos ( params->{'user_id'} );
+    my $ride_infos = MotoViz::RideInfo::getUserRideInfos ( params->{'user_id'} );
     if ( ! $ride_infos ) {
         status 'not found';
         return 'not found';
@@ -93,6 +93,12 @@ get '/v1/ride/:user_id' => sub {
         push ( @{$array}, $ride_info );
     }
     return return_json ( $array );
+};
+
+get '/v1/ride' => sub {
+    my $ride_infos = MotoViz::RideInfo::getRideInfos( undef, 1 );
+    return return_json ( $ride_infos );
+
 };
 
 put '/v1/ride/:user_id/:ride_id' => sub {
@@ -133,7 +139,7 @@ get '/v1/reset_rides' => sub {
     foreach my $user_id ( sort ( readdir ( $dh ) ) ) {
         next if ( $user_id !~ /^uid_[\w\-]/ );
         debug ( $user_id );
-        my $ride_infos = MotoViz::RideInfo::getRideInfos ( $user_id );
+        my $ride_infos = MotoViz::RideInfo::getUserRideInfos ( $user_id );
         foreach my $ride_info ( @{$ride_infos} ) {
             if ( $ride_info && $ride_info->{'input_data_type'} ) {
                 if ( $ride_info->{'public'} ) {

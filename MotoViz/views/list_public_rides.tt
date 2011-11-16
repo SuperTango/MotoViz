@@ -1,0 +1,115 @@
+<script type="text/javascript" src="<% ui_url%>/javascripts/jquery.dataTables.js"></script>
+<script type="text/javascript">
+
+var oTable;
+function convertSecondsToHuman ( seconds ) {
+    var humanString = "";
+    humanString += $.sprintf ( '%02d', Math.floor ( seconds / 3600 ) );
+    humanString += ':';
+    seconds -= Math.floor ( seconds / 3600 ) * 3600;
+
+    humanString += $.sprintf ( '%02d', Math.floor ( seconds / 60 ) );
+    humanString += ':';
+    seconds -= Math.floor ( seconds / 60 ) * 60;
+
+    humanString += $.sprintf ( '%02d', seconds );
+    return humanString;
+}
+
+$(document).ready(function() {
+    oTable = $('#rides_datatable').dataTable ( {
+        "bJQueryUI" : false,
+        "aaSorting" : [ [ 2, 'asc' ] ],
+        "sAjaxSource": '<% rides_url %>',
+        "iDisplayLength": 50,
+        "bLengthChange" : false,
+        "aoColumns": [
+            { "mDataProp": "title",
+              "fnRender": 
+                function ( oObj ) {
+                    //console.log ( oObj );
+                    oObj.aData.title2 = oObj.aData.title;
+                    oObj.aData.viewUrl = '/viewer/' + oObj.aData.user_id + '/' + oObj.aData.ride_id;
+                    return '<a href="' + oObj.aData.viewUrl + '">' + oObj.aData.title + '</a>';
+                }
+            },
+            { 
+                "bSortable": false,
+                "fnRender":
+                function ( oObj ) {
+                    var str = '<a href="' + oObj.aData.viewUrl + '">' + 
+                    '<img border=1 src="http://maps.googleapis.com/maps/api/staticmap?size=125x50&sensor=false&' +
+                            'markers=color:green|size:small|' + oObj.aData.lat_start + ',' + oObj.aData.lon_start + '&' +
+                            'markers=color:red|size:small|' + oObj.aData.lat_end + ',' + oObj.aData.lon_end + '&' +
+                            'path=weight:3|color:0xFF0000EE|enc:' + oObj.aData.map_polyline + '"></a>';
+                    return str;
+                } 
+            },
+            { "fnRender":
+                function ( oObj ) {
+                    var date = new Date ( oObj.aData.time_start * 1000 );
+                    return $.sprintf ( "%04d-%02d-%02d<br/>%02d:%02d:%02d", 
+                            date.getFullYear(), ( date.getMonth() + 1), date.getDate(),
+                            date.getHours(), date.getMinutes(), date.getSeconds() );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    var date = new Date ( oObj.aData.time_end * 1000 );
+                    return $.sprintf ( "%04d-%02d-%02d<br/>%02d:%02d:%02d", 
+                            date.getFullYear(), ( date.getMonth() + 1), date.getDate(),
+                            date.getHours(), date.getMinutes(), date.getSeconds() );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return convertSecondsToHuman ( oObj.aData.time_end - oObj.aData.time_start );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.distance_gps_total );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.speed_avg );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.wh_total );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.wh_per_mile );
+                } 
+            },
+            { "fnRender": 
+                function ( oObj ) {
+                    return $.sprintf ( "%.03f", oObj.aData.miles_per_kwh );
+                } 
+            },
+        ],
+    } );
+});
+</script>
+<table id="rides_datatable" cellpadding="3" cellspacing="0" border="0" class="display" width="100%">
+        <thead>
+                <tr>
+                        <th width="35%">Description</th>
+                        <th width="7%">map</th>
+                        <th width="7%">Start</th>
+                        <th width="7%">End</th>
+                        <th width="7%">Duration</th>
+                        <th width="7%">Distance (mi)</th>
+                        <th width="7%">Avg Speed (mi)</th>
+                        <th width="7%">Energy Used (Wh)</th>
+                        <th width="7%">Efficiency (Wh/mi)</th>
+                        <th width="7%">Efficiency (mi/kWh)</th>
+                </tr>
+        </thead>
+        <tbody>
+        </tbody>
+</table>

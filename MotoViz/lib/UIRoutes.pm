@@ -366,7 +366,12 @@ post '/upload' => sub {
 };
 
 sub get_ride_infos {
-    my $url = setting ( "motoviz_api_url" ) . '/v1/ride/' . session ( 'user' )->{'user_id'};
+    my $user_id = shift;
+
+    my $url = setting ( "motoviz_api_url" ) . '/v1/ride';
+    if ( $user_id ) {
+        $url .= '/' . $user_id;
+    }
     debug ( "URL: " . $url );
     my $ua = LWP::UserAgent->new;
     my $response = $ua->get ( $url );
@@ -383,31 +388,21 @@ sub get_ride_infos {
     }
 }
 
-sub do_rides_page {
-
-    my $ret = get_ride_infos();
-    my $rides;
-    if ( $ret->{'code'} == 1 ) {
-        $rides = $ret->{'data'};
-    } elsif ( $ret->{'response_code'} == 404 ) {
-        $rides = [];
-    } else {
-        status 500;
-        return 'Error';
-    }
-    motoviz_template 'list_rides.tt', {
-        user => session ( 'user' ),
-        ride_infos => $rides,
-        ride_info_count => scalar ( @{$rides} ),
-        rides_url => setting ( "motoviz_ui_url" ) . '/v1/rides',
-    };
-};
-
-get '/rides' => sub {
+get '/my_rides' => sub {
     if ( my $login_page = ensure_logged_in() ) {
         return $login_page;
     }
-    return do_rides_page();
+    return motoviz_template 'list_rides.tt', {
+        user => session ( 'user' ),
+        rides_url => setting ( "motoviz_ui_url" ) . '/v1/my_rides',
+    };
+};
+
+get '/public_rides' => sub {
+    return motoviz_template 'list_public_rides.tt', {
+        user => session ( 'user' ),
+        rides_url => setting ( "motoviz_ui_url" ) . '/v1/public_rides',
+    };
 };
 
 get '/v1/points_client/:user_id/:ride_id' => sub {
@@ -433,14 +428,9 @@ get '/v1/metric/:user_id/:ride_id/:metric' => sub {
     return send_file ( $metric_file, content_type => 'application/json', system_path => 1 );
 };
 
-get '/v1/rides' => sub {
-    if ( my $login_page = ensure_logged_in() ) {
-        status 401;
-        return "Access Denied!";
-    }
-    my $ret = get_ride_infos();
+sub return_rest_rides {
+    my $ret = shift;
     my $data;
-    debug ( pp ( $ret ) );
     if ( $ret->{'code'} == 1 ) {
         $data = { aaData => $ret->{'data'} };
         content_type 'application/json';
@@ -454,6 +444,21 @@ get '/v1/rides' => sub {
             debug ( "internal error" );
         }
     }
+}
+
+get '/v1/my_rides' => sub {
+    if ( my $login_page = ensure_logged_in() ) {
+        status 401;
+        return "Access Denied!";
+    }
+    my $ret = get_ride_infos ( session ( 'user' )->{'user_id'} );
+    return return_rest_rides ( $ret );
+
+};
+
+get '/v1/public_rides' => sub {
+    my $ret = get_ride_infos();
+    return return_rest_rides ( $ret );
 };
 
 any [ 'get', 'post' ] => '/v1/update_ride/:ride_id' => sub {
