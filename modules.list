@@ -1,7 +1,17 @@
 # list of modules that are required
 Dancer
-GPS::Point
-Crypt::Eksblowfish::Bcrypt
+Plack
+YAML
+Starman
+Data::Dump
+
+# For UI
 Data::UUID
-Geo::Inverse
 Captcha::reCAPTCHA
+Crypt::Eksblowfish::Bcrypt
+JSON
+
+# For API
+GPS::Point
+Algorithm::GooglePolylineEncoding
+Geo::Inverse
