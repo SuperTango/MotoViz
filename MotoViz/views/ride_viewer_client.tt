@@ -605,6 +605,9 @@ function processData() {
              
               $.each(this.points, function(i, point) {
                   s += '<br/>'+ point.series.name +': '+ $.sprintf ( "%.03f", point.y );
+                  if ( point.series.name == "Volts" ) {
+                      s += $.sprintf ( " (%.03f)", ( point.y / 36 ) );
+                  }
               });
               var index = "X" + this.x;
               //console.log ( index );
