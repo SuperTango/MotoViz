@@ -43,7 +43,7 @@ sub init {
     } else {
         return { code => 0, message => 'Cannot calculate log frequency' };
     }
-    debug ( "log_frequency: " . $self->{'log_frequency'} );
+    debug ( "log_frequency: " . $self->{'log_frequency'} . " ca_log_count: " . $ca_log_count . " ca_gps_count: " . $ca_gps_count);
 
     my $nmea_parser = new MotoViz::NMEAParser;
     $ret = $nmea_parser->init ( $self->{'ca_gps_file'} );
@@ -109,8 +109,9 @@ sub getNextRecord {
                     $self->{'distance_gps_total'} += $record->{'distance_gps_delta'};
                     $record->{'distance_gps_total'} = $self->{'distance_gps_total'};
 
-                    if ( $record->{'time_diff'} < 5000 ) {
+                    if ( ( $record->{'time_diff'} > 0 ) && ( $record->{'time_diff'} < 5000 ) ) {
                         $record->{'wh'} = $record->{'watts'} * $record->{'time_diff'} / 3600;
+                        #debug ( "watts: " . $record->{'watts'} . ", wh: " . $record->{'wh'} . " time_diff: " . $record->{'time_diff'} . ", time: " . $record->{'time'} );
                         if ( $record->{'distance_gps_delta'} > 0.0000001 ) {
                             $record->{'whPerMile'} = ( $record->{'distance_gps_delta'} ) ? $record->{'wh'} / $record->{'distance_gps_delta'} : 0;
                             $record->{'milesPerKWh'} = ( $record->{'distance_gps_delta'} ) ? $record->{'distance_gps_delta'} / $record->{'wh'} * 1000 : 0;
