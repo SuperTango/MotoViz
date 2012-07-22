@@ -20,6 +20,7 @@ WriteMakefile(
         'Geo::Inverse' => 0,
         'Data::UUID' => 0,
         'Time::Local' => 0,
+        'Algorithm::GooglePolylineEncoding' => 0,
 
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
