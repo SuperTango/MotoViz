@@ -22,7 +22,7 @@ my $acceptable_emails = {
     'daveh225@acsalaska.net' => 1,
 };
 
-before sub {
+hook 'before' => sub {
     debug ( pp ( session ) );
     if ( request->path ne '/login' ) {
         if ( session ( 'original_destination' ) ) {
