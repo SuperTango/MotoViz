@@ -36,9 +36,10 @@ sub init {
 
     my $ca_log_count = count_lines ( $self->{'ca_log_file'} );
     my $ca_gps_count = count_lines ( $self->{'ca_gps_file'}, 1 );
-    if ( abs ( $ca_gps_count - $ca_log_count ) < 5 ) {
+    debug ( " ca_log_count: " . $ca_log_count . " ca_gps_count: " . $ca_gps_count);
+    if ( abs ( $ca_gps_count - $ca_log_count ) < 35 ) {
         $self->{'log_frequency'} = 1;
-    } elsif ( abs ( $ca_gps_count - ( $ca_log_count / 5 ) ) < 5 ) {
+    } elsif ( abs ( $ca_gps_count - ( $ca_log_count / 5 ) ) < 35 ) {
         $self->{'log_frequency'} = 5;
     } else {
         return { code => 0, message => 'Cannot calculate log frequency' };
