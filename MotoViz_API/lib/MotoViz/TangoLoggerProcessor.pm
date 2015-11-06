@@ -170,17 +170,26 @@ sub verifyTangoFile {
     while ( $count <= 6 ) {
         my $line = <$fh>;
         if ( $line =~ /LOGFMT (\d+)/ ) {
-            $self->{'header'} = $headers->{'v' . $1};
+            my $v = $1;
+            #debug ( "version: v$1" );
+            $self->{'header'} = $headers->{'v' . $v};
             next;
         }
         if ( $line ) {
+            chomp ( $line );
+            chomp ( $line );
+            $line =~ s/,\s*$//;
+            #debug ( $line );
             my @arr = split ( /,/, $line );
-            if ( @arr == ( @{$self->{'header'}} + 1 ) ) {
+            #debug ( scalar @arr );
+            #debug ( scalar @{$self->{'header'}} );
+            if ( scalar @arr == ( scalar @{$self->{'header'}} ) ) {
                 $successes++;
             }
         }
         $count++;
     }
+    #debug ( "Done.  Sueccesses: $successes, count: $count" );
     close ( $fh );
     if ( $successes >= 4 ) {
         return { code => 1, data => 1 };
