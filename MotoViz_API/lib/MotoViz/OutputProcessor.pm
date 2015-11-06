@@ -68,6 +68,7 @@ sub generateOutputFiles {
         battery_amps => [],
         battery_volts => [],
         battery_watt_hours => [],
+        rpm_controller => [],
         distance_gps_delta => [],
         distance_gps_total => [],
         distance_sensor_delta => [],

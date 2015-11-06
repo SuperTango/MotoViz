@@ -104,6 +104,7 @@ sub getNextRecord {
         }
         $record->{'battery_amps'} = ( $self->{'rev'} >= 4 ) ? $hash->{'batt_current_Avg'} : $hash->{'batt_current'};
         $record->{'battery_volts'} = $hash->{'batt_voltage'};
+        $record->{'rpm_controller'} = $hash->{'rpm_controller'};
         $record->{'speed_sensor'} = $hash->{'speed_rpm'};
         $record->{'speed_gps'} = $hash->{'speed_gps'};
         $record->{'watts'} = $record->{'battery_amps'} * $record->{'battery_volts'};
