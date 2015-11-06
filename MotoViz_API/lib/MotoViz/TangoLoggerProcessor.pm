@@ -13,6 +13,9 @@ my $headers = {
     v3 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','failed_cs','distance_gps','distance_rpm','batt_voltage','batt_current_reading','batt_current','motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','m/kwh_gps','m/kwh_rpm','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
     v4 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','failed_cs','distance_gps','distance_rpm','batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
     v5 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','failed_cs','distance_gps','distance_rpm','batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
+    v6 => [ 'current_millis','diff_millis','iterations','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp' ],
+    v6 => [ 'current_millis','current_corrected_millis','diff_millis','iterations','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp' ],
+    v7 => [ 'current_millis','current_corrected_millis','diff_millis','loops_since_last_log','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp' ],
 };
 
 
@@ -88,7 +91,7 @@ sub getNextRecord {
         for ( my $i = 0; $i < @{$self->{'header'}}; $i++ ) {
             $hash->{$self->{'header'}->[$i]} = $arr[$i];
         }
-        if ( $hash->{'date'} && $hash->{'time'} ) {
+        if ( ( $hash->{'date'} > 0 ) && ( $hash->{'time'} > 0 ) ) {
             my ( $year, $mon, $day ) = $hash->{'date'} =~ /(\d\d\d\d)(\d\d)(\d\d)/;
             my ( $hour, $min, $sec ) = $hash->{'time'} =~ /(\d\d)(\d\d)(\d\d)/;
             next if ( $hash->{'date'} == 20000000 );
@@ -109,7 +112,7 @@ sub getNextRecord {
         $record->{'altitude'} = $hash->{'altitude'} || 0;
         $record->{'motor_temp_controller'} = $hash->{'motor_temp'} || 0;
         $record->{'motor_temp_sensor'} = $hash->{'motor_temp_calc'} || 0;
-        $record->{'throttle_percent'} = ( $hash->{'tps_a/d'} / 255 * 100 ) || 0;
+        $record->{'throttle_percent'} = ( $self->{'rev'} >= 6 ) ? $hash->{'throttle_percent'} : ( $hash->{'tps_a/d'} / 255 * 100 ) || 0;
         #$record->{'distance_sensor_total'} = 
         #$record->{'battery_amp_hours'} = 
         if ( $self->{'last_record'} ) {
