@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use base 'MotoViz::InputFileProcessor';    # sets @MotoViz::TangoLoggerProcessor::ISA = ('MotoViz::InputFileProcessor');
 use Dancer ':syntax';
-use GPS::Point;
 use Time::Local;
 use Data::Dump qw( pp );
 
@@ -14,7 +13,7 @@ my $headers = {
     v4 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','failed_cs','distance_gps','distance_rpm','batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
     v5 => [ 'current_millis','diff_millis','count','iterations','date','time','fix_age','speed_gps','speed_rpm','lat','lon','altitude','heading','failed_cs','distance_gps','distance_rpm','batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp_calc','motor_thermistor_reading','brake_a/d','tps_a/d','controller_power','5v_power','b+','ia','ib','ic','va','vb','vc','pwm','enable_motor_rotation','motor_temp','controller_temp','high_mosfet','low_mosfet','rpm_high','rpm_low','current_%','error_high','error_low'],
     v6 => [ 'current_millis','diff_millis','iterations','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp' ],
-    v6 => [ 'current_millis','current_corrected_millis','diff_millis','iterations','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp' ],
+    #v6 => [ 'current_millis','current_corrected_millis','diff_millis','iterations','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp' ],
     v7 => [ 'current_millis','current_corrected_millis','diff_millis','loops_since_last_log','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp' ],
     v8 => [ 'current_millis','current_corrected_millis','diff_millis','loops_since_last_log','date','time','fix_age','speed_gps','speed_rpm','speed_controller', 'lat','lon','heading','altitude','failed_cs','distance_gps','distance_rpm','rpm_controller', 'batt_voltage','batt_current_reading_total','batt_current_Avg','batt_current_reading_single', 'batt_current_single', 'batt_current_controller', 'wh', 'wh_total', 'motor_current','motor_voltage','motor_watts','wh/m_gps','wh/m_rpm','wh/m_trip','m/kwh_gps','m/kwh_rpm','m/kwh_trip','motor_temp', 'motor_temp_calc','motor_thermistor_reading','throttle_percent', 'bdi', 'controller_heatsink_temp', 'reverse_switch', '3A_packet_age', '3B_packet_age' ],
 };
@@ -172,7 +171,7 @@ sub verifyTangoFile {
         my $line = <$fh>;
         if ( $line =~ /LOGFMT (\d+)/ ) {
             my $v = $1;
-            #debug ( "version: v$1" );
+            debug ( "version: v$1" );
             $self->{'header'} = $headers->{'v' . $v};
             next;
         }
@@ -180,10 +179,10 @@ sub verifyTangoFile {
             chomp ( $line );
             chomp ( $line );
             $line =~ s/,\s*$//;
-            #debug ( $line );
+            debug ( $line );
             my @arr = split ( /,/, $line );
-            #debug ( scalar @arr );
-            #debug ( scalar @{$self->{'header'}} );
+            debug ( "scalar \@arr: " . scalar @arr );
+            debug ( "scalar \@{self->{'header'}}: " . scalar @{$self->{'header'}} );
             if ( scalar @arr == ( scalar @{$self->{'header'}} ) ) {
                 $successes++;
             }
@@ -195,7 +194,7 @@ sub verifyTangoFile {
     if ( $successes >= 4 ) {
         return { code => 1, data => 1 };
     } else {
-        return { code => 1, data => 0 };
+        return { code => 1, data => 0, message => 'not enough successful lines parsed'  };
     }
 }
 
